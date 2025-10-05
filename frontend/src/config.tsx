@@ -141,20 +141,31 @@ const Config: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this tier list? This action cannot be undone and will delete all associated votes.')) return;
+    console.log('[Config] Delete button clicked for tier list:', id);
     
+    if (!confirm('Are you sure you want to delete this tier list? This action cannot be undone and will delete all associated votes.')) {
+      console.log('[Config] Delete cancelled by user');
+      return;
+    }
+    
+    console.log('[Config] Deleting tier list:', id);
     try {
-      await apiClient.deleteTierList(id);
+      const result = await apiClient.deleteTierList(id);
+      console.log('[Config] Delete successful:', result);
+      
       // Close results view if we deleted the currently viewed tier list
       if (selectedTierList?._id === id) {
         setSelectedTierList(null);
         setResults(null);
       }
+      
       // Refresh the tier list
       await loadTierLists();
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to delete tier list');
+      console.error('[Config] Delete failed:', err);
+      console.error('[Config] Error details:', err.response?.data);
+      setError(err.response?.data?.error || err.message || 'Failed to delete tier list');
     }
   };
 
@@ -414,11 +425,18 @@ const Config: React.FC = () => {
                       </button>
                     </>
                   )}
-                  {tierList._id !== activeTierList?._id && (
-                    <button className="button button-danger" onClick={() => handleDelete(tierList._id)}>
-                      Delete
-                    </button>
-                  )}
+                  <button 
+                    className="button button-danger" 
+                    onClick={() => handleDelete(tierList._id)}
+                    disabled={tierList._id === activeTierList?._id}
+                    title={tierList._id === activeTierList?._id ? 'Cannot delete active tier list' : 'Delete this tier list'}
+                    style={{ 
+                      opacity: tierList._id === activeTierList?._id ? 0.5 : 1,
+                      cursor: tierList._id === activeTierList?._id ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>
