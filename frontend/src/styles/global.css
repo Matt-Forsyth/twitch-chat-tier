@@ -1,0 +1,179 @@
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Twitch Dark Theme Colors */
+:root {
+  --twitch-purple: #9147ff;
+  --twitch-purple-hover: #772ce8;
+  --twitch-background: #18181b;
+  --twitch-background-alt: #1f1f23;
+  --twitch-background-input: #464649;
+  --twitch-text: #efeff1;
+  --twitch-text-alt: #adadb8;
+  --twitch-border: #2e2e35;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.button {
+  background-color: var(--twitch-purple);
+  color: var(--twitch-text);
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background-color: var(--twitch-purple-hover);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-secondary {
+  background-color: var(--twitch-background-input);
+}
+
+.button-secondary:hover {
+  background-color: #535357;
+}
+
+.button-danger {
+  background-color: #e91916;
+}
+
+.button-danger:hover {
+  background-color: #c21010;
+}
+
+.input {
+  background-color: var(--twitch-background-input);
+  color: var(--twitch-text);
+  border: 2px solid transparent;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--twitch-purple);
+}
+
+.card {
+  background-color: var(--twitch-background-alt);
+  border: 1px solid var(--twitch-border);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.tier-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  background-color: var(--twitch-background);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tier-label {
+  width: 80px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  padding: 15px;
+  flex-shrink: 0;
+}
+
+.tier-items {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  min-height: 80px;
+}
+
+.tier-item {
+  background-color: var(--twitch-background-alt);
+  border: 2px solid var(--twitch-border);
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+  min-width: 100px;
+}
+
+.tier-item:hover {
+  border-color: var(--twitch-purple);
+  transform: translateY(-2px);
+}
+
+.tier-item.selected {
+  border-color: var(--twitch-purple);
+  background-color: rgba(145, 71, 255, 0.1);
+}
+
+.tier-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.tier-item-name {
+  font-size: 12px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  font-size: 18px;
+  color: var(--twitch-text-alt);
+}
+
+.error {
+  background-color: rgba(233, 25, 22, 0.1);
+  border: 1px solid #e91916;
+  color: #e91916;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.success {
+  background-color: rgba(0, 229, 255, 0.1);
+  border: 1px solid #00e5ff;
+  color: #00e5ff;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}

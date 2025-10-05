@@ -1,0 +1,365 @@
+import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { twitchExt } from './utils/twitch';
+import { apiClient } from './utils/api';
+import { TierListConfig, TierListItem, TierListResults } from './types';
+import './styles/global.css';
+
+const Config: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tierLists, setTierLists] = useState<TierListConfig[]>([]);
+  const [selectedTierList, setSelectedTierList] = useState<TierListConfig | null>(null);
+  const [results, setResults] = useState<TierListResults | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  
+  // Form state
+  const [title, setTitle] = useState('');
+  const [items, setItems] = useState<TierListItem[]>([]);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemImage, setNewItemImage] = useState('');
+
+  useEffect(() => {
+    twitchExt.init();
+    
+    twitchExt.onAuthorized(async (auth) => {
+      if (auth.role !== 'broadcaster') {
+        setError('Only broadcasters can access this page');
+        setLoading(false);
+        return;
+      }
+      
+      apiClient.setToken(auth.token);
+      await loadTierLists();
+    });
+  }, []);
+
+  const loadTierLists = async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient.getTierLists();
+      setTierLists(data);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load tier lists');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadResults = async (tierListId: string) => {
+    try {
+      const data = await apiClient.getTierListResults(tierListId);
+      setResults(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load results');
+    }
+  };
+
+  const handleAddItem = () => {
+    if (!newItemName.trim()) return;
+    
+    const newItem: TierListItem = {
+      id: Date.now().toString(),
+      name: newItemName.trim(),
+      imageUrl: newItemImage.trim() || undefined,
+    };
+    
+    setItems([...items, newItem]);
+    setNewItemName('');
+    setNewItemImage('');
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const handleCreateTierList = async () => {
+    if (!title.trim() || items.length === 0) {
+      setError('Please provide a title and at least one item');
+      return;
+    }
+    
+    try {
+      await apiClient.createTierList({ title, items });
+      setTitle('');
+      setItems([]);
+      setShowCreateForm(false);
+      await loadTierLists();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to create tier list');
+    }
+  };
+
+  const handleActivate = async (id: string) => {
+    try {
+      await apiClient.activateTierList(id);
+      await loadTierLists();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to activate tier list');
+    }
+  };
+
+  const handleComplete = async (id: string) => {
+    try {
+      await apiClient.completeTierList(id);
+      await loadTierLists();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to complete tier list');
+    }
+  };
+
+  const handleReset = async (id: string) => {
+    if (!confirm('Are you sure you want to reset all votes?')) return;
+    
+    try {
+      await apiClient.resetTierListVotes(id);
+      if (results?.tierList._id === id) {
+        await loadResults(id);
+      }
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset votes');
+    }
+  };
+
+  const handleViewResults = async (tierList: TierListConfig) => {
+    setSelectedTierList(tierList);
+    await loadResults(tierList._id);
+  };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
+
+  if (error && tierLists.length === 0) {
+    return (
+      <div className="container">
+        <div className="error">{error}</div>
+      </div>
+    );
+  }
+
+  if (showCreateForm) {
+    return (
+      <div className="container">
+        <div className="card">
+          <h1>Create New Tier List</h1>
+          {error && <div className="error">{error}</div>}
+          
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '5px' }}>Title</label>
+            <input 
+              type="text" 
+              className="input" 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Best Video Games of All Time"
+            />
+          </div>
+
+          <h3>Items</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '10px', marginBottom: '20px' }}>
+            <input 
+              type="text" 
+              className="input" 
+              value={newItemName} 
+              onChange={(e) => setNewItemName(e.target.value)}
+              placeholder="Item name"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddItem()}
+            />
+            <input 
+              type="text" 
+              className="input" 
+              value={newItemImage} 
+              onChange={(e) => setNewItemImage(e.target.value)}
+              placeholder="Image URL (optional)"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddItem()}
+            />
+            <button className="button" onClick={handleAddItem}>Add Item</button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+            {items.map((item) => (
+              <div key={item.id} className="card" style={{ padding: '10px', position: 'relative' }}>
+                {item.imageUrl && (
+                  <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '4px', marginBottom: '5px' }} />
+                )}
+                <div style={{ fontSize: '14px', marginBottom: '10px' }}>{item.name}</div>
+                <button 
+                  className="button button-danger" 
+                  onClick={() => handleRemoveItem(item.id)}
+                  style={{ width: '100%', padding: '5px', fontSize: '12px' }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="button" onClick={handleCreateTierList} disabled={items.length === 0}>
+              Create Tier List
+            </button>
+            <button className="button button-secondary" onClick={() => setShowCreateForm(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedTierList && results) {
+    const groupedResults = results.results.reduce((acc, result) => {
+      if (!acc[result.averageTier]) {
+        acc[result.averageTier] = [];
+      }
+      acc[result.averageTier].push(result);
+      return acc;
+    }, {} as Record<string, typeof results.results>);
+
+    return (
+      <div className="container">
+        <div className="card">
+          <button className="button button-secondary" onClick={() => setSelectedTierList(null)}>
+            ← Back to List
+          </button>
+          
+          <h1>{selectedTierList.title} - Results</h1>
+          <p style={{ color: 'var(--twitch-text-alt)' }}>
+            Total Voters: {results.totalVoters}
+          </p>
+
+          <div style={{ marginTop: '20px' }}>
+            {selectedTierList.tiers.map((tier) => (
+              <div key={tier} className="tier-container">
+                <div 
+                  className="tier-label" 
+                  style={{ backgroundColor: getTierColor(tier), color: '#000' }}
+                >
+                  {tier}
+                </div>
+                <div className="tier-items">
+                  {(groupedResults[tier] || []).map((result) => (
+                    <div key={result.item.id} className="tier-item">
+                      {result.item.imageUrl && <img src={result.item.imageUrl} alt={result.item.name} />}
+                      <span className="tier-item-name">{result.item.name}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--twitch-text-alt)' }}>
+                        {result.totalVotes} votes
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const activeTierList = tierLists.find(tl => tl.status === 'active');
+
+  return (
+    <div className="container">
+      <div className="card">
+        <h1>Tier List Manager</h1>
+        {error && <div className="error">{error}</div>}
+        
+        <button className="button" onClick={() => setShowCreateForm(true)} style={{ marginBottom: '20px' }}>
+          Create New Tier List
+        </button>
+
+        {activeTierList && (
+          <div className="card" style={{ backgroundColor: 'rgba(145, 71, 255, 0.1)', borderColor: 'var(--twitch-purple)' }}>
+            <h3>🔴 Currently Active</h3>
+            <h2>{activeTierList.title}</h2>
+            <p style={{ color: 'var(--twitch-text-alt)' }}>
+              {activeTierList.items.length} items · Started {new Date(activeTierList.startTime!).toLocaleString()}
+            </p>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button className="button button-secondary" onClick={() => handleViewResults(activeTierList)}>
+                View Results
+              </button>
+              <button className="button button-danger" onClick={() => handleComplete(activeTierList._id)}>
+                Complete
+              </button>
+              <button className="button button-secondary" onClick={() => handleReset(activeTierList._id)}>
+                Reset Votes
+              </button>
+            </div>
+          </div>
+        )}
+
+        <h2>All Tier Lists</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {tierLists.map((tierList) => (
+            <div key={tierList._id} className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <div>
+                  <h3>{tierList.title}</h3>
+                  <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0' }}>
+                    Status: <span style={{ 
+                      color: tierList.status === 'active' ? '#00e5ff' : tierList.status === 'completed' ? '#7fff7f' : '#808080',
+                      fontWeight: 'bold'
+                    }}>
+                      {tierList.status.toUpperCase()}
+                    </span>
+                  </p>
+                  <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0' }}>
+                    {tierList.items.length} items
+                  </p>
+                  <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0', fontSize: '12px' }}>
+                    Created: {new Date(tierList.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {tierList.status === 'draft' && (
+                    <button className="button" onClick={() => handleActivate(tierList._id)}>
+                      Activate
+                    </button>
+                  )}
+                  {tierList.status === 'completed' && (
+                    <>
+                      <button className="button button-secondary" onClick={() => handleViewResults(tierList)}>
+                        View Results
+                      </button>
+                      <button className="button" onClick={() => handleActivate(tierList._id)}>
+                        Reactivate
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {tierLists.length === 0 && (
+          <p style={{ textAlign: 'center', color: 'var(--twitch-text-alt)', padding: '40px' }}>
+            No tier lists yet. Create your first one!
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+function getTierColor(tier: string): string {
+  const colors: Record<string, string> = {
+    'S': '#ff7f7f',
+    'A': '#ffbf7f',
+    'B': '#ffff7f',
+    'C': '#7fff7f',
+    'D': '#7fbfff',
+    'F': '#bf7fff',
+  };
+  return colors[tier] || '#808080';
+}
+
+const root = createRoot(document.getElementById('root')!);
+root.render(<Config />);
