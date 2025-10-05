@@ -93,6 +93,54 @@ class ApiClient {
     const response = await this.client.get(`/votes/${tierListId}`);
     return response.data;
   }
+
+  // Suggestion endpoints
+  async createSuggestion(tierListId: string, itemName: string, imageUrl?: string) {
+    const response = await this.client.post('/suggestions', { tierListId, itemName, imageUrl });
+    return response.data;
+  }
+
+  async getSuggestions(tierListId: string, status?: 'pending' | 'approved' | 'rejected') {
+    const params = status ? `?status=${status}` : '';
+    const response = await this.client.get(`/suggestions/tierlist/${tierListId}${params}`);
+    return response.data;
+  }
+
+  async approveSuggestion(id: string) {
+    const response = await this.client.post(`/suggestions/${id}/approve`);
+    return response.data;
+  }
+
+  async rejectSuggestion(id: string) {
+    const response = await this.client.post(`/suggestions/${id}/reject`);
+    return response.data;
+  }
+
+  async deleteSuggestion(id: string) {
+    const response = await this.client.delete(`/suggestions/${id}`);
+    return response.data;
+  }
+
+  // Analytics endpoints
+  async getAnalytics(tierListId: string) {
+    const response = await this.client.get(`/analytics/tierlist/${tierListId}`);
+    return response.data;
+  }
+
+  async getChannelAnalytics() {
+    const response = await this.client.get('/analytics/channel');
+    return response.data;
+  }
+
+  async getChannelSummary() {
+    const response = await this.client.get('/analytics/channel/summary');
+    return response.data;
+  }
+
+  async generateAnalytics(tierListId: string) {
+    const response = await this.client.post(`/analytics/generate/${tierListId}`);
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -54,3 +54,40 @@ export interface TwitchAuth {
   channelId: string;
   role: 'broadcaster' | 'moderator' | 'viewer';
 }
+
+export interface Suggestion {
+  _id: string;
+  tierListId: string;
+  channelId: string;
+  userId: string;
+  username: string;
+  itemName: string;
+  imageUrl?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Analytics {
+  _id: string;
+  tierListId: string;
+  channelId: string;
+  title: string;
+  totalVotes: number;
+  totalVoters: number;
+  itemCount: number;
+  completedAt: string;
+  averageTierDistribution: Record<string, number>;
+  topItems: Array<{ itemName: string; averageTier: string; voteCount: number }>;
+  createdAt: string;
+}
+
+export interface AnalyticsSummary {
+  totalTierLists: number;
+  totalVotes: number;
+  totalVoters: number;
+  averageVotesPerList: number;
+  averageVotersPerList: number;
+  mostPopularTier: string;
+  tierDistribution: Record<string, number>;
+}

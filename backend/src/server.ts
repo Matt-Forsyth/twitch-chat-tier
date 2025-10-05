@@ -11,6 +11,8 @@ import { initializeWebSocket } from './websocket/websocketHandler';
 import tierListRoutes from './routes/tierListRoutes';
 import authRoutes from './routes/authRoutes';
 import voteRoutes from './routes/voteRoutes';
+import suggestionRoutes from './routes/suggestionRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -51,6 +53,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/tierlists', tierListRoutes);
 app.use('/api/votes', voteRoutes);
+app.use('/api/suggestions', suggestionRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // WebSocket initialization
 initializeWebSocket(wss);

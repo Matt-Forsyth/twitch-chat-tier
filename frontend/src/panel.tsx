@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { twitchExt } from './utils/twitch';
 import { apiClient } from './utils/api';
 import { wsClient } from './utils/websocket';
@@ -13,6 +14,10 @@ const Panel: React.FC = () => {
   const [userVotes, setUserVotes] = useState<Map<string, string>>(new Map());
   const [hasVoted, setHasVoted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showSuggestionForm, setShowSuggestionForm] = useState(false);
+  const [suggestionName, setSuggestionName] = useState('');
+  const [suggestionImage, setSuggestionImage] = useState('');
+  const [suggestionSubmitting, setSuggestionSubmitting] = useState(false);
 
   useEffect(() => {
     twitchExt.init();
@@ -67,6 +72,18 @@ const Panel: React.FC = () => {
     setUserVotes(newVotes);
   };
 
+  const handleDragEnd = (result: DropResult) => {
+    if (hasVoted) return;
+    if (!result.destination) return;
+    
+    const itemId = result.draggableId;
+    const tier = result.destination.droppableId;
+    
+    const newVotes = new Map(userVotes);
+    newVotes.set(itemId, tier);
+    setUserVotes(newVotes);
+  };
+
   const handleSubmit = async () => {
     if (!tierList || userVotes.size === 0) return;
     
@@ -90,6 +107,24 @@ const Panel: React.FC = () => {
     }
   };
 
+  const handleSuggestionSubmit = async () => {
+    if (!tierList || !suggestionName.trim()) return;
+    
+    try {
+      setSuggestionSubmitting(true);
+      await apiClient.createSuggestion(tierList._id, suggestionName.trim(), suggestionImage.trim() || undefined);
+      setSuggestionName('');
+      setSuggestionImage('');
+      setShowSuggestionForm(false);
+      alert('Suggestion submitted! The broadcaster will review it.');
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit suggestion');
+    } finally {
+      setSuggestionSubmitting(false);
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -106,6 +141,7 @@ const Panel: React.FC = () => {
   }
 
   const allItemsVoted = tierList.items.length === userVotes.size;
+  const unvotedItems = tierList.items.filter(item => !userVotes.has(item.id));
 
   return (
     <div className="container">
@@ -117,92 +153,214 @@ const Panel: React.FC = () => {
         <p style={{ color: 'var(--twitch-text-alt)', marginBottom: '20px' }}>
           {hasVoted 
             ? 'You have already voted. Thank you for participating!' 
-            : 'Click on each item to assign it to a tier, then submit your vote.'}
+            : 'Drag items to tiers or use dropdowns to assign ratings, then submit your vote.'}
         </p>
 
-        <div style={{ marginBottom: '20px' }}>
-          {tierList.tiers.map((tier) => (
-            <div key={tier} className="tier-container">
-              <div 
-                className="tier-label" 
-                style={{ 
-                  backgroundColor: getTierColor(tier),
-                  color: '#000'
-                }}
-              >
-                {tier}
-              </div>
-              <div className="tier-items">
-                {tierList.items.map((item) => {
-                  const itemTier = userVotes.get(item.id);
-                  if (itemTier !== tier) return null;
-                  
-                  return (
-                    <div key={item.id} className="tier-item selected">
-                      {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
-                      <span className="tier-item-name">{item.name}</span>
+        {!hasVoted && (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            {/* Tier containers */}
+            <div style={{ marginBottom: '20px' }}>
+              {tierList.tiers.map((tier) => (
+                <Droppable key={tier} droppableId={tier} direction="horizontal">
+                  {(provided, snapshot) => (
+                    <div 
+                      className="tier-container"
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      style={{
+                        backgroundColor: snapshot.isDraggingOver ? 'rgba(145, 71, 255, 0.1)' : undefined,
+                      }}
+                    >
+                      <div 
+                        className="tier-label" 
+                        style={{ 
+                          backgroundColor: getTierColor(tier),
+                          color: '#000'
+                        }}
+                      >
+                        {tier}
+                      </div>
+                      <div className="tier-items" style={{ minHeight: '60px', display: 'flex', flexWrap: 'wrap', gap: '5px', padding: '5px' }}>
+                        {tierList.items
+                          .filter(item => userVotes.get(item.id) === tier)
+                          .map((item, index) => (
+                            <Draggable key={item.id} draggableId={item.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="tier-item selected"
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    opacity: snapshot.isDragging ? 0.8 : 1,
+                                    cursor: 'grab',
+                                  }}
+                                >
+                                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
+                                  <span className="tier-item-name">{item.name}</span>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                        {provided.placeholder}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                </Droppable>
+              ))}
             </div>
-          ))}
-        </div>
+
+            {/* Unvoted items pool */}
+            {unvotedItems.length > 0 && (
+              <Droppable droppableId="unvoted" direction="horizontal">
+                {(provided) => (
+                  <div 
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    style={{ 
+                      border: '2px dashed var(--twitch-border)', 
+                      borderRadius: '4px', 
+                      padding: '15px', 
+                      marginBottom: '20px',
+                      minHeight: '80px'
+                    }}
+                  >
+                    <h3 style={{ marginTop: 0 }}>Items to Rate:</h3>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                      {unvotedItems.map((item, index) => (
+                        <Draggable key={item.id} draggableId={item.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="tier-item"
+                              style={{
+                                ...provided.draggableProps.style,
+                                opacity: snapshot.isDragging ? 0.8 : 1,
+                                cursor: 'grab',
+                                border: '2px solid var(--twitch-border)',
+                              }}
+                            >
+                              {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
+                              <span className="tier-item-name">{item.name}</span>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  </div>
+                )}
+              </Droppable>
+            )}
+          </DragDropContext>
+        )}
+
+        {/* Voted items display (after submission) */}
+        {hasVoted && (
+          <div style={{ marginBottom: '20px' }}>
+            {tierList.tiers.map((tier) => (
+              <div key={tier} className="tier-container">
+                <div 
+                  className="tier-label" 
+                  style={{ 
+                    backgroundColor: getTierColor(tier),
+                    color: '#000'
+                  }}
+                >
+                  {tier}
+                </div>
+                <div className="tier-items">
+                  {tierList.items.map((item) => {
+                    const itemTier = userVotes.get(item.id);
+                    if (itemTier !== tier) return null;
+                    
+                    return (
+                      <div key={item.id} className="tier-item selected">
+                        {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
+                        <span className="tier-item-name">{item.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {!hasVoted && (
           <>
-            <h3>Select tiers for items:</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px', marginBottom: '20px' }}>
-              {tierList.items.map((item) => {
-                const currentTier = userVotes.get(item.id);
-                
-                return (
-                  <div key={item.id} style={{ border: '1px solid var(--twitch-border)', borderRadius: '4px', padding: '10px' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                      {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />}
-                      <div style={{ marginTop: '5px', fontSize: '14px' }}>{item.name}</div>
-                      {currentTier && (
-                        <div style={{ 
-                          marginTop: '5px', 
-                          fontSize: '12px', 
-                          color: 'var(--twitch-purple)',
-                          fontWeight: 'bold'
-                        }}>
-                          Current: {currentTier}
-                        </div>
-                      )}
-                    </div>
-                    <select 
-                      value={currentTier || ''} 
-                      onChange={(e) => handleItemClick(item.id, e.target.value)}
-                      className="input"
-                      style={{ width: '100%', padding: '5px' }}
-                    >
-                      <option value="">Select tier</option>
-                      {tierList.tiers.map((tier) => (
-                        <option key={tier} value={tier}>{tier}</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-
             <button 
               className="button" 
               onClick={handleSubmit} 
               disabled={!allItemsVoted || submitting}
-              style={{ width: '100%' }}
+              style={{ width: '100%', marginBottom: '10px' }}
             >
               {submitting ? 'Submitting...' : 'Submit Your Vote'}
             </button>
             {!allItemsVoted && (
-              <p style={{ color: 'var(--twitch-text-alt)', marginTop: '10px', textAlign: 'center' }}>
-                Please vote for all {tierList.items.length} items before submitting
+              <p style={{ color: 'var(--twitch-text-alt)', textAlign: 'center' }}>
+                Please vote for all {tierList.items.length} items before submitting ({unvotedItems.length} remaining)
               </p>
             )}
           </>
         )}
+
+        {/* Suggestion form */}
+        <div style={{ marginTop: '20px', borderTop: '1px solid var(--twitch-border)', paddingTop: '15px' }}>
+          {!showSuggestionForm ? (
+            <button 
+              className="button button-secondary" 
+              onClick={() => setShowSuggestionForm(true)}
+              style={{ width: '100%' }}
+            >
+              💡 Suggest an Item
+            </button>
+          ) : (
+            <div>
+              <h3>Suggest an Item</h3>
+              <input
+                type="text"
+                className="input"
+                placeholder="Item name"
+                value={suggestionName}
+                onChange={(e) => setSuggestionName(e.target.value)}
+                style={{ width: '100%', marginBottom: '10px' }}
+              />
+              <input
+                type="text"
+                className="input"
+                placeholder="Image URL (optional)"
+                value={suggestionImage}
+                onChange={(e) => setSuggestionImage(e.target.value)}
+                style={{ width: '100%', marginBottom: '10px' }}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  className="button" 
+                  onClick={handleSuggestionSubmit}
+                  disabled={!suggestionName.trim() || suggestionSubmitting}
+                  style={{ flex: 1 }}
+                >
+                  {suggestionSubmitting ? 'Submitting...' : 'Submit Suggestion'}
+                </button>
+                <button 
+                  className="button button-secondary" 
+                  onClick={() => {
+                    setShowSuggestionForm(false);
+                    setSuggestionName('');
+                    setSuggestionImage('');
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Buy Me a Coffee */}
