@@ -37,6 +37,12 @@ class ApiClient {
     return response.data;
   }
 
+  async getTierListsByChannel(channelId: string) {
+    // For public/OBS access - fetch tier lists for a specific channel
+    const response = await this.client.get(`/tierlists?channelId=${channelId}`);
+    return response.data;
+  }
+
   async getTierList(id: string) {
     const response = await this.client.get(`/tierlists/${id}`);
     return response.data;

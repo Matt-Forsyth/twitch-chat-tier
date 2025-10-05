@@ -34,10 +34,32 @@ router.post('/', authenticateTwitch, requireBroadcaster, async (req: AuthRequest
 
 /**
  * Get all tier lists for a channel
+ * Supports both authenticated (from Twitch extension) and public access (for OBS with ?channelId=...)
  */
-router.get('/', authenticateTwitch, async (req: AuthRequest, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const channelId = req.twitchAuth!.channel_id;
+    let channelId: string;
+    
+    // Check if channelId is provided as query parameter (for OBS/public access)
+    if (req.query.channelId) {
+      channelId = req.query.channelId as string;
+    } else {
+      // Otherwise, authenticate and use the auth channelId
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No authorization token provided' });
+      }
+      
+      const token = authHeader.substring(7);
+      const { verifyTwitchToken } = await import('../services/twitchAuth');
+      const decoded = await verifyTwitchToken(token);
+      
+      if (!decoded) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+      
+      channelId = decoded.channel_id;
+    }
     
     const tierLists = await TierListConfig.find({ channelId }).sort({ createdAt: -1 });
     
@@ -152,8 +174,9 @@ router.post('/:id/complete', authenticateTwitch, requireBroadcaster, async (req:
 
 /**
  * Get aggregated results for a tier list
+ * Public endpoint - no authentication required (for OBS overlay)
  */
-router.get('/:id/results', authenticateTwitch, async (req: AuthRequest, res: Response) => {
+router.get('/:id/results', async (req: AuthRequest, res: Response) => {
   try {
     const tierListId = req.params.id;
     

@@ -204,6 +204,29 @@ const Panel: React.FC = () => {
           </>
         )}
       </div>
+      
+      {/* Buy Me a Coffee */}
+      <div style={{ textAlign: 'center', padding: '15px 0', borderTop: '1px solid var(--twitch-border)', marginTop: '20px' }}>
+        <a 
+          href="https://buymeacoffee.com/matthewforsyth" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '6px',
+            color: 'var(--twitch-text-alt)',
+            textDecoration: 'none',
+            fontSize: '12px',
+            transition: 'color 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.color = 'var(--twitch-purple)'}
+          onMouseOut={(e) => e.currentTarget.style.color = 'var(--twitch-text-alt)'}
+        >
+          <span style={{ fontSize: '16px' }}>☕</span>
+          <span>Support the dev</span>
+        </a>
+      </div>
     </div>
   );
 };
