@@ -28,9 +28,10 @@ const Config: React.FC = () => {
     twitchExt.init();
     
     twitchExt.onAuthorized(async (auth) => {
-      console.log('[Config] Auth received:', { role: auth.role, userId: auth.userId });
+      console.log('[Config] Auth received:', { role: auth.role, userId: auth.userId, channelId: auth.channelId });
       
       setChannelId(auth.channelId);
+      console.log('[Config] Channel ID set to:', auth.channelId);
       
       if (auth.role !== 'broadcaster') {
         setError('Only broadcasters can access this page');
@@ -280,6 +281,11 @@ const Config: React.FC = () => {
     <div className="container">
       <div className="card">
         <h1>Tier List Manager</h1>
+        {channelId && (
+          <p style={{ fontSize: '12px', color: 'var(--twitch-text-alt)', marginBottom: '10px' }}>
+            Channel ID: {channelId}
+          </p>
+        )}
         {error && <div className="error">{error}</div>}
         
         <button className="button" onClick={() => setShowCreateForm(true)} style={{ marginBottom: '20px' }}>

@@ -16,11 +16,16 @@ const OBSOverlay: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const channelParam = urlParams.get('channel');
     
+    console.log('[OBS Overlay] URL:', window.location.href);
+    console.log('[OBS Overlay] Channel param:', channelParam);
+    
     if (channelParam) {
       // OBS mode with channel parameter
+      console.log('[OBS Overlay] Running in OBS mode with channel:', channelParam);
       initWithChannel(channelParam);
     } else {
       // Twitch extension mode
+      console.log('[OBS Overlay] Running in Twitch extension mode');
       twitchExt.init();
       
       twitchExt.onAuthorized(async (auth) => {
@@ -54,9 +59,12 @@ const OBSOverlay: React.FC = () => {
 
   const loadActiveTierList = async (channel: string) => {
     try {
+      console.log('[OBS Overlay] Loading tier lists for channel:', channel);
       setLoading(true);
       const lists = await apiClient.getTierListsByChannel(channel);
+      console.log('[OBS Overlay] Found tier lists:', lists);
       const active = lists.find((list: TierListConfig) => list.status === 'active');
+      console.log('[OBS Overlay] Active tier list:', active);
       
       if (active) {
         setTierList(active);

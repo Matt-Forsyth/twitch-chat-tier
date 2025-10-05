@@ -40,9 +40,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     let channelId: string;
     
+    console.log('[TierList GET] Query params:', req.query);
+    console.log('[TierList GET] Auth header:', req.headers.authorization);
+    
     // Check if channelId is provided as query parameter (for OBS/public access)
     if (req.query.channelId) {
       channelId = req.query.channelId as string;
+      console.log('[TierList GET] Using channelId from query:', channelId);
     } else {
       // Otherwise, authenticate and use the auth channelId
       const authHeader = req.headers.authorization;
@@ -59,9 +63,11 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       }
       
       channelId = decoded.channel_id;
+      console.log('[TierList GET] Using channelId from auth:', channelId);
     }
     
     const tierLists = await TierListConfig.find({ channelId }).sort({ createdAt: -1 });
+    console.log('[TierList GET] Found tier lists:', tierLists.length, 'for channel:', channelId);
     
     res.json(tierLists);
   } catch (error) {
