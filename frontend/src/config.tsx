@@ -13,6 +13,8 @@ const Config: React.FC = () => {
   const [selectedTierList, setSelectedTierList] = useState<TierListConfig | null>(null);
   const [results, setResults] = useState<TierListResults | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -127,34 +129,48 @@ const Config: React.FC = () => {
   };
 
   const handleReset = async (id: string) => {
-    if (!confirm('Are you sure you want to reset all votes?')) return;
+    console.log('[Config] Reset button clicked for tier list:', id);
+    setResetConfirmId(id);
+  };
+
+  const confirmReset = async () => {
+    if (!resetConfirmId) return;
     
+    console.log('[Config] Resetting votes for tier list:', resetConfirmId);
     try {
-      await apiClient.resetTierListVotes(id);
-      if (results?.tierList._id === id) {
-        await loadResults(id);
+      await apiClient.resetTierListVotes(resetConfirmId);
+      if (results?.tierList._id === resetConfirmId) {
+        await loadResults(resetConfirmId);
       }
       setError(null);
+      setResetConfirmId(null);
     } catch (err: any) {
+      console.error('[Config] Reset failed:', err);
       setError(err.message || 'Failed to reset votes');
+      setResetConfirmId(null);
     }
+  };
+
+  const cancelReset = () => {
+    console.log('[Config] Reset cancelled by user');
+    setResetConfirmId(null);
   };
 
   const handleDelete = async (id: string) => {
     console.log('[Config] Delete button clicked for tier list:', id);
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     
-    if (!confirm('Are you sure you want to delete this tier list? This action cannot be undone and will delete all associated votes.')) {
-      console.log('[Config] Delete cancelled by user');
-      return;
-    }
-    
-    console.log('[Config] Deleting tier list:', id);
+    console.log('[Config] Deleting tier list:', deleteConfirmId);
     try {
-      const result = await apiClient.deleteTierList(id);
+      const result = await apiClient.deleteTierList(deleteConfirmId);
       console.log('[Config] Delete successful:', result);
       
       // Close results view if we deleted the currently viewed tier list
-      if (selectedTierList?._id === id) {
+      if (selectedTierList?._id === deleteConfirmId) {
         setSelectedTierList(null);
         setResults(null);
       }
@@ -162,11 +178,18 @@ const Config: React.FC = () => {
       // Refresh the tier list
       await loadTierLists();
       setError(null);
+      setDeleteConfirmId(null);
     } catch (err: any) {
       console.error('[Config] Delete failed:', err);
       console.error('[Config] Error details:', err.response?.data);
       setError(err.response?.data?.error || err.message || 'Failed to delete tier list');
+      setDeleteConfirmId(null);
     }
+  };
+
+  const cancelDelete = () => {
+    console.log('[Config] Delete cancelled by user');
+    setDeleteConfirmId(null);
   };
 
   const handleViewResults = async (tierList: TierListConfig) => {
@@ -472,6 +495,72 @@ const Config: React.FC = () => {
           <span>Support the developer</span>
         </a>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{
+            maxWidth: '400px',
+            margin: '20px',
+            padding: '20px'
+          }}>
+            <h2 style={{ marginTop: 0 }}>Confirm Delete</h2>
+            <p>Are you sure you want to delete this tier list? This action cannot be undone and will delete all associated votes.</p>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button className="button button-danger" onClick={confirmDelete} style={{ flex: 1 }}>
+                Delete
+              </button>
+              <button className="button button-secondary" onClick={cancelDelete} style={{ flex: 1 }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Confirmation Modal */}
+      {resetConfirmId && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{
+            maxWidth: '400px',
+            margin: '20px',
+            padding: '20px'
+          }}>
+            <h2 style={{ marginTop: 0 }}>Confirm Reset</h2>
+            <p>Are you sure you want to reset all votes for this tier list? This action cannot be undone.</p>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button className="button button-danger" onClick={confirmReset} style={{ flex: 1 }}>
+                Reset Votes
+              </button>
+              <button className="button button-secondary" onClick={cancelReset} style={{ flex: 1 }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
