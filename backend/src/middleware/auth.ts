@@ -15,18 +15,24 @@ export const authenticateTwitch = (
 ): void => {
   try {
     const authHeader = req.headers.authorization;
+    console.log('[Auth Middleware] Authorization header:', authHeader?.substring(0, 50));
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[Auth Middleware] No Bearer token found');
       res.status(401).json({ error: 'No authorization token provided' });
       return;
     }
     
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    console.log('[Auth Middleware] Extracted token:', token?.substring(0, 50));
+    console.log('[Auth Middleware] Token length:', token?.length);
+    
     const decoded = verifyTwitchToken(token);
     
     req.twitchAuth = decoded;
     next();
   } catch (error) {
+    console.error('[Auth Middleware] Error:', error);
     res.status(401).json({ error: 'Invalid authorization token' });
   }
 };
