@@ -20,9 +20,15 @@ const Config: React.FC = () => {
   const [newItemImage, setNewItemImage] = useState('');
 
   useEffect(() => {
+    console.log('[Config] Component mounted');
+    console.log('[Config] Window.Twitch:', window.Twitch);
+    console.log('[Config] API URL:', import.meta.env.VITE_API_URL);
+    
     twitchExt.init();
     
     twitchExt.onAuthorized(async (auth) => {
+      console.log('[Config] Auth received:', { role: auth.role, userId: auth.userId });
+      
       if (auth.role !== 'broadcaster') {
         setError('Only broadcasters can access this page');
         setLoading(false);
@@ -36,11 +42,14 @@ const Config: React.FC = () => {
 
   const loadTierLists = async () => {
     try {
+      console.log('[Config] Loading tier lists...');
       setLoading(true);
       const data = await apiClient.getTierLists();
+      console.log('[Config] Tier lists loaded:', data);
       setTierLists(data);
       setError(null);
     } catch (err: any) {
+      console.error('[Config] Failed to load tier lists:', err);
       setError(err.message || 'Failed to load tier lists');
     } finally {
       setLoading(false);

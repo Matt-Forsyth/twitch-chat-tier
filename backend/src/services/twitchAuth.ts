@@ -22,6 +22,7 @@ export interface TwitchTokenPayload {
 export const verifyTwitchToken = (token: string): TwitchTokenPayload => {
   // Development mode - allow mock tokens
   if (process.env.NODE_ENV === 'development' && token === 'mock_token_for_development') {
+    console.log('[Auth] Using mock token for development');
     return {
       user_id: 'dev_user_123',
       channel_id: 'dev_channel_123',
@@ -30,12 +31,18 @@ export const verifyTwitchToken = (token: string): TwitchTokenPayload => {
   }
 
   try {
+    console.log('[Auth] Verifying Twitch JWT token...');
+    console.log('[Auth] Extension secret length:', EXTENSION_SECRET?.length);
+    console.log('[Auth] Token prefix:', token?.substring(0, 20));
+    
     const decoded = jwt.verify(token, Buffer.from(EXTENSION_SECRET, 'base64'), {
       algorithms: ['HS256'],
     }) as TwitchTokenPayload;
     
+    console.log('[Auth] Token verified successfully for user:', decoded.user_id);
     return decoded;
   } catch (error) {
+    console.error('[Auth] Token verification failed:', error);
     throw new Error('Invalid Twitch token');
   }
 };
