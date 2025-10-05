@@ -28,13 +28,28 @@ class TwitchExtension {
   init() {
     if (window.Twitch?.ext) {
       window.Twitch.ext.onAuthorized((auth: any) => {
+        console.log('[TwitchExt] Raw auth object from Twitch:', auth);
+        console.log('[TwitchExt] Auth keys:', Object.keys(auth));
+        
+        // Decode JWT to get role
+        let role: 'broadcaster' | 'moderator' | 'viewer' = 'viewer';
+        try {
+          const tokenPayload = JSON.parse(atob(auth.token.split('.')[1]));
+          console.log('[TwitchExt] Decoded JWT payload:', tokenPayload);
+          role = tokenPayload.role;
+        } catch (e) {
+          console.error('[TwitchExt] Failed to decode JWT:', e);
+        }
+        
         this.auth = {
           token: auth.token,
           userId: auth.userId,
           channelId: auth.channelId,
-          role: auth.role as 'broadcaster' | 'moderator' | 'viewer',
+          role: role,
         };
 
+        console.log('[TwitchExt] Final auth object:', this.auth);
+        
         // Notify all callbacks
         this.onAuthCallbacks.forEach((callback) => callback(this.auth!));
       });

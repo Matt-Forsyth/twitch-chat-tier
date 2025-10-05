@@ -21,6 +21,9 @@ const wss = new WebSocketServer({ server, path: '/ws' });
 
 const PORT = process.env.PORT || 8081;
 
+// Trust proxy for Railway
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
