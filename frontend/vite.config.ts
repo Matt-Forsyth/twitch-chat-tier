@@ -27,7 +27,6 @@ export default defineConfig({
         'panel': './panel.html',
         'config': './config.html',
         'mobile': './mobile.html',
-        'obs_overlay': './obs_overlay.html',
       },
     },
   },

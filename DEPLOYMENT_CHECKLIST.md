@@ -18,7 +18,6 @@ This zip contains:
 - `video_overlay.html` - Video overlay component
 - `video_component.html` - Video component
 - `mobile.html` - Mobile view
-- `obs_overlay.html` - OBS browser source overlay
 - `assets/` - All compiled JavaScript and CSS
 
 ### Backend Status
@@ -26,7 +25,6 @@ This zip contains:
 - MongoDB connected
 - All 12 API endpoints operational including new DELETE endpoint
 - WebSocket server running
-- Public endpoints for OBS overlay access
 
 ### Upload to Twitch Steps
 
@@ -90,21 +88,7 @@ This zip contains:
 5. Submit your vote
 6. Verify it shows your vote was recorded
 
-#### OBS Overlay
-1. Add Browser Source in OBS
-2. URL: `https://or6ehrdoc9gzasby1hmhhtw4wa0qdm.ext-twitch.tv/or6ehrdoc9gzasby1hmhhtw4wa0qdm/0.0.15/obs_overlay.html?channel=1002733764`
-3. Width: 1920, Height: 1080 (or your stream resolution)
-4. Custom CSS: (optional for positioning)
-5. ✅ Check "Shutdown source when not visible"
-6. Should display the active tier list with transparent background
-
 ### Troubleshooting
-
-#### If OBS Overlay Shows "No Active Tier List"
-1. Check browser console in OBS (right-click source → Interact → F12)
-2. Verify the channel parameter in URL matches your Twitch channel ID
-3. Check API logs at Railway for any errors
-4. Verify tier list status is "active" in MongoDB
 
 #### If Delete Button Doesn't Appear
 1. Refresh the config panel
@@ -150,8 +134,7 @@ PORT=8081
 2. ✅ Move version to Testing
 3. ✅ Install on your channel
 4. ✅ Test all functionality (create, activate, vote, delete)
-5. ✅ Test OBS overlay
-6. ✅ If everything works, submit for review for public release
+5. ✅ If everything works, submit for review for public release
 
 ### Support Links
 - **Backend API**: https://twitch-chat-tier-production.up.railway.app

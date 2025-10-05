@@ -34,7 +34,7 @@ router.post('/', authenticateTwitch, requireBroadcaster, async (req: AuthRequest
 
 /**
  * Get all tier lists for a channel
- * Supports both authenticated (from Twitch extension) and public access (for OBS with ?channelId=...)
+ * Supports both authenticated (from Twitch extension) and public access (with ?channelId=...)
  */
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
@@ -43,7 +43,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     console.log('[TierList GET] Query params:', req.query);
     console.log('[TierList GET] Auth header:', req.headers.authorization);
     
-    // Check if channelId is provided as query parameter (for OBS/public access)
+    // Check if channelId is provided as query parameter (for public access)
     if (req.query.channelId) {
       channelId = req.query.channelId as string;
       console.log('[TierList GET] Using channelId from query:', channelId);
@@ -207,7 +207,7 @@ router.post('/:id/complete', authenticateTwitch, requireBroadcaster, async (req:
 
 /**
  * Get aggregated results for a tier list
- * Public endpoint - no authentication required (for OBS overlay)
+ * Public endpoint - no authentication required
  */
 router.get('/:id/results', async (req: AuthRequest, res: Response) => {
   try {

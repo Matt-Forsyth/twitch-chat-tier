@@ -353,50 +353,7 @@ const Config: React.FC = () => {
               {activeTierList.items.length} items · Started {new Date(activeTierList.startTime!).toLocaleString()}
             </p>
             
-            {/* OBS Browser Source URL */}
-            <div style={{ 
-              marginTop: '15px', 
-              padding: '15px', 
-              backgroundColor: 'rgba(0, 0, 0, 0.3)', 
-              borderRadius: '4px',
-              border: '1px solid var(--twitch-border)'
-            }}>
-              <h4 style={{ marginTop: 0, marginBottom: '10px', fontSize: '14px' }}>🎥 OBS Browser Source URL:</h4>
-              <div style={{ 
-                display: 'flex', 
-                gap: '10px', 
-                alignItems: 'center' 
-              }}>
-                <input
-                  type="text"
-                  readOnly
-                  value={window.location.href.replace('/config.html', `/obs_overlay.html?channel=${channelId}`)}
-                  className="input"
-                  style={{ flex: 1, fontSize: '12px' }}
-                  onClick={(e) => (e.target as HTMLInputElement).select()}
-                />
-                <button
-                  className="button button-secondary"
-                  style={{ padding: '8px 16px', fontSize: '12px' }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href.replace('/config.html', `/obs_overlay.html?channel=${channelId}`));
-                    alert('URL copied to clipboard!');
-                  }}
-                >
-                  Copy
-                </button>
-              </div>
-              <p style={{ 
-                fontSize: '11px', 
-                color: 'var(--twitch-text-alt)', 
-                marginTop: '8px',
-                marginBottom: 0 
-              }}>
-                Add this as a Browser Source in OBS (1920x1080 recommended)
-              </p>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
               <button className="button button-secondary" onClick={() => handleViewResults(activeTierList)}>
                 View Results
               </button>
