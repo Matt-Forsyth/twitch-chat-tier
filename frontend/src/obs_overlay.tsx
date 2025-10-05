@@ -60,22 +60,29 @@ const OBSOverlay: React.FC = () => {
   const loadActiveTierList = async (channel: string) => {
     try {
       console.log('[OBS Overlay] Loading tier lists for channel:', channel);
+      console.log('[OBS Overlay] API URL:', import.meta.env.VITE_API_URL);
       setLoading(true);
       const lists = await apiClient.getTierListsByChannel(channel);
       console.log('[OBS Overlay] Found tier lists:', lists);
+      console.log('[OBS Overlay] Number of tier lists:', lists.length);
+      
       const active = lists.find((list: TierListConfig) => list.status === 'active');
       console.log('[OBS Overlay] Active tier list:', active);
       
       if (active) {
+        console.log('[OBS Overlay] Setting active tier list:', active.title);
         setTierList(active);
         await loadResults(active._id);
       } else {
+        console.log('[OBS Overlay] No active tier list found');
         setTierList(null);
         setResults(null);
       }
     } catch (err) {
-      console.error('Failed to load tier list:', err);
+      console.error('[OBS Overlay] Failed to load tier list:', err);
+      console.error('[OBS Overlay] Error details:', err instanceof Error ? err.message : err);
     } finally {
+      console.log('[OBS Overlay] Setting loading to false');
       setLoading(false);
     }
   };

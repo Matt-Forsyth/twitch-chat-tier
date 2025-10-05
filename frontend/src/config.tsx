@@ -50,6 +50,7 @@ const Config: React.FC = () => {
       setLoading(true);
       const data = await apiClient.getTierLists();
       console.log('[Config] Tier lists loaded:', data);
+      console.log('[Config] Tier list statuses:', data.map((t: TierListConfig) => ({ id: t._id, title: t.title, status: t.status })));
       setTierLists(data);
       setError(null);
     } catch (err: any) {
@@ -136,6 +137,24 @@ const Config: React.FC = () => {
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to reset votes');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this tier list? This action cannot be undone and will delete all associated votes.')) return;
+    
+    try {
+      await apiClient.deleteTierList(id);
+      // Close results view if we deleted the currently viewed tier list
+      if (selectedTierList?._id === id) {
+        setSelectedTierList(null);
+        setResults(null);
+      }
+      // Refresh the tier list
+      await loadTierLists();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete tier list');
     }
   };
 
@@ -394,6 +413,11 @@ const Config: React.FC = () => {
                         Reactivate
                       </button>
                     </>
+                  )}
+                  {tierList._id !== activeTierList?._id && (
+                    <button className="button button-danger" onClick={() => handleDelete(tierList._id)}>
+                      Delete
+                    </button>
                   )}
                 </div>
               </div>

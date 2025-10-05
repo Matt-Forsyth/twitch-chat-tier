@@ -122,6 +122,33 @@ router.put('/:id', authenticateTwitch, requireBroadcaster, async (req: AuthReque
 });
 
 /**
+ * Delete a tier list (broadcaster only)
+ */
+router.delete('/:id', authenticateTwitch, requireBroadcaster, async (req: AuthRequest, res: Response) => {
+  try {
+    const channelId = req.twitchAuth!.channel_id;
+    
+    const tierList = await TierListConfig.findOneAndDelete({
+      _id: req.params.id,
+      channelId
+    });
+    
+    if (!tierList) {
+      res.status(404).json({ error: 'Tier list not found' });
+      return;
+    }
+    
+    // Also delete all votes associated with this tier list
+    await Vote.deleteMany({ tierListId: req.params.id });
+    
+    res.json({ message: 'Tier list deleted successfully', tierList });
+  } catch (error) {
+    console.error('Error deleting tier list:', error);
+    res.status(500).json({ error: 'Failed to delete tier list' });
+  }
+});
+
+/**
  * Activate a tier list (broadcaster only)
  */
 router.post('/:id/activate', authenticateTwitch, requireBroadcaster, async (req: AuthRequest, res: Response) => {

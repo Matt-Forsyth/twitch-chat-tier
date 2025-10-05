@@ -58,6 +58,11 @@ class ApiClient {
     return response.data;
   }
 
+  async deleteTierList(id: string) {
+    const response = await this.client.delete(`/tierlists/${id}`);
+    return response.data;
+  }
+
   async activateTierList(id: string) {
     const response = await this.client.post(`/tierlists/${id}/activate`);
     return response.data;

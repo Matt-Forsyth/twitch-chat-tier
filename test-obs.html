@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test OBS Overlay</title>
+    <style>
+        body {
+            background: #0e0e10;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #18181b;
+            border-radius: 8px;
+        }
+        button {
+            background: #9147ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #772ce8;
+        }
+        #results {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        iframe {
+            width: 1920px;
+            height: 1080px;
+            border: 2px solid #9147ff;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <h1>OBS Overlay Test</h1>
+    
+    <div class="test-section">
+        <h2>API Tests</h2>
+        <button onclick="testAPI()">Test Get Tier Lists</button>
+        <button onclick="testResults()">Test Get Results</button>
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>OBS Overlay Preview</h2>
+        <p>This should show your active tier list:</p>
+        <iframe src="http://localhost:3000/obs_overlay.html?channel=1002733764"></iframe>
+    </div>
+
+    <script>
+        const API_URL = 'https://twitch-chat-tier-production.up.railway.app/api';
+        const CHANNEL_ID = '1002733764';
+
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`${API_URL}/tierlists?channelId=${CHANNEL_ID}`);
+                const data = await response.json();
+                
+                results.textContent = `Found ${data.length} tier lists:\n\n` + 
+                    JSON.stringify(data, null, 2);
+                
+                const active = data.find(list => list.status === 'active');
+                if (active) {
+                    results.textContent += `\n\n✓ Active tier list found: ${active.title}`;
+                } else {
+                    results.textContent += '\n\n✗ No active tier list';
+                }
+            } catch (error) {
+                results.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testResults() {
+            const results = document.getElementById('results');
+            results.textContent = 'Loading...';
+            
+            try {
+                // First get the active tier list
+                const listsResponse = await fetch(`${API_URL}/tierlists?channelId=${CHANNEL_ID}`);
+                const lists = await listsResponse.json();
+                const active = lists.find(list => list.status === 'active');
+                
+                if (!active) {
+                    results.textContent = 'No active tier list found';
+                    return;
+                }
+                
+                // Then get its results
+                const resultsResponse = await fetch(`${API_URL}/tierlists/${active._id}/results`);
+                const resultsData = await resultsResponse.json();
+                
+                results.textContent = `Results for "${active.title}":\n\n` + 
+                    JSON.stringify(resultsData, null, 2);
+            } catch (error) {
+                results.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            setTimeout(testAPI, 1000);
+        };
+    </script>
+</body>
+</html>
