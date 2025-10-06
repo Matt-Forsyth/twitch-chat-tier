@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.25] - 2024-12-XX
+
+### ✨ Added
+- **Vote Distribution Modal**: Click on any item in results view to see detailed vote breakdown
+  - Shows total votes and average tier
+  - Visual bar chart showing percentage distribution across all tiers
+  - Color-coded tier labels matching tier list colors
+  - Item image display (if available)
+  - Clean modal interface with responsive design
+
+### 🐛 Fixed
+- **Enhanced Unpublish Logging**: Added comprehensive frontend logging for unpublish operations
+  - Logs when button is clicked
+  - Logs when user cancels confirmation
+  - Logs API call start/success/failure with detailed error information
+  - Helps debug unpublish issues with Railway backend logs
+
+---
+
+## [0.0.24.1] - 2024-12-XX
+
+### 🐛 Fixed
+- **Duplicate Tier List Display**: Fixed issue where tier list appeared twice when new items were available
+  - Now only shows draggable voting interface when new items exist
+  - "My Vote" toggle hidden until all items are voted on
+- **Vote Persistence on Refresh**: Fixed votes not saving when page was refreshed
+  - Added `loadActiveTierList()` after vote submission to refresh data
+  - Ensures UI shows current state from backend
+- **Improved Template Unpublish**: Enhanced unpublish endpoint with better template lookup
+  - Added fallback logic for template matching (direct ID + ObjectId string)
+  - Comprehensive backend logging for debugging
+- **Template Browser Debugging**: Added extensive logging to publish/fetch endpoints
+  - Track publish requests, template creation, and final state
+  - Monitor fetch queries and results
+
+---
+
 ## [0.0.24] - 2024-12-XX
 
 ### 🎨 Major UI Simplification

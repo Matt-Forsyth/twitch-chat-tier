@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { twitchExt } from './utils/twitch';
 import { apiClient } from './utils/api';
-import { TierListConfig, TierListItem, TierListResults } from './types';
+import { TierListConfig, TierListItem, TierListResults, TierListResult } from './types';
 import TemplateBrowser from './TemplateBrowser';
 import './styles/global.css';
 
@@ -13,6 +13,7 @@ const Config: React.FC = () => {
   const [tierLists, setTierLists] = useState<TierListConfig[]>([]);
   const [selectedTierList, setSelectedTierList] = useState<TierListConfig | null>(null);
   const [results, setResults] = useState<TierListResults | null>(null);
+  const [selectedItemResult, setSelectedItemResult] = useState<TierListResult | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
@@ -317,18 +318,31 @@ const Config: React.FC = () => {
   };
 
   const handleUnpublish = async (tierListId: string) => {
+    console.log('[Frontend] Unpublish button clicked for:', tierListId);
+    
     if (!confirm('Are you sure you want to make this tier list private? It will be removed from the template browser.')) {
+      console.log('[Frontend] Unpublish cancelled by user');
       return;
     }
 
     try {
-      console.log('Unpublishing tier list:', tierListId);
+      console.log('[Frontend] Starting unpublish request...');
+      console.log('[Frontend] Channel ID:', channelId);
+      console.log('[Frontend] Tier List ID:', tierListId);
+      
       await apiClient.unpublishTierList(tierListId);
+      
+      console.log('[Frontend] Unpublish API call successful, reloading tier lists...');
       await loadTierLists();
+      
+      console.log('[Frontend] Tier lists reloaded successfully');
       alert('Template unpublished successfully!');
       setError(null);
     } catch (err: any) {
-      console.error('Unpublish error:', err);
+      console.error('[Frontend] Unpublish error:', err);
+      console.error('[Frontend] Error response:', err.response);
+      console.error('[Frontend] Error data:', err.response?.data);
+      
       const errorMsg = err.response?.data?.error || err.message || 'Failed to unpublish template';
       alert(`Failed to unpublish: ${errorMsg}`);
       setError(errorMsg);
@@ -454,11 +468,27 @@ const Config: React.FC = () => {
                 </div>
                 <div className="tier-items">
                   {(groupedResults[tier] || []).map((result) => (
-                    <div key={result.item.id} className="tier-item">
+                    <div 
+                      key={result.item.id} 
+                      className="tier-item"
+                      onClick={() => setSelectedItemResult(result)}
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 0 8px rgba(145, 71, 255, 0.5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
                       {result.item.imageUrl && <img src={result.item.imageUrl} alt={result.item.name} />}
                       <span className="tier-item-name">{result.item.name}</span>
                       <span style={{ fontSize: '11px', color: 'var(--twitch-text-alt)' }}>
-                        {result.totalVotes} votes
+                        {result.totalVotes} votes • Click for details
                       </span>
                     </div>
                   ))}
@@ -1066,6 +1096,150 @@ const Config: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vote Distribution Modal */}
+      {selectedItemResult && selectedTierList && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div className="card" style={{
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'start',
+              marginBottom: '20px'
+            }}>
+              <div style={{ flex: 1 }}>
+                <h2 style={{ margin: 0, marginBottom: '5px' }}>{selectedItemResult.item.name}</h2>
+                <p style={{ color: 'var(--twitch-text-alt)', margin: 0, fontSize: '13px' }}>
+                  Vote Distribution
+                </p>
+              </div>
+              <button
+                className="button button-secondary"
+                onClick={() => setSelectedItemResult(null)}
+                style={{ padding: '5px 15px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {selectedItemResult.item.imageUrl && (
+              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <img 
+                  src={selectedItemResult.item.imageUrl} 
+                  alt={selectedItemResult.item.name}
+                  style={{ 
+                    maxWidth: '200px', 
+                    maxHeight: '200px', 
+                    objectFit: 'contain',
+                    borderRadius: '8px'
+                  }}
+                />
+              </div>
+            )}
+
+            <div style={{
+              backgroundColor: 'rgba(145, 71, 255, 0.1)',
+              padding: '15px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '14px', color: 'var(--twitch-text-alt)', marginBottom: '5px' }}>
+                Total Votes
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#9147ff' }}>
+                {selectedItemResult.totalVotes}
+              </div>
+              <div style={{ fontSize: '14px', color: 'var(--twitch-text-alt)', marginTop: '5px' }}>
+                Average Tier: <span style={{ 
+                  fontWeight: 'bold', 
+                  color: getTierColor(selectedItemResult.averageTier),
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  padding: '2px 8px',
+                  borderRadius: '4px'
+                }}>
+                  {selectedItemResult.averageTier}
+                </span>
+              </div>
+            </div>
+
+            <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Vote Breakdown</h3>
+            
+            {selectedTierList.tiers.map((tier) => {
+              const count = selectedItemResult.tierCounts[tier] || 0;
+              const percentage = selectedItemResult.totalVotes > 0 
+                ? (count / selectedItemResult.totalVotes * 100).toFixed(1) 
+                : '0.0';
+              
+              return (
+                <div key={tier} style={{ marginBottom: '12px' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '5px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        backgroundColor: getTierColor(tier),
+                        color: '#000',
+                        fontWeight: 'bold',
+                        padding: '4px 12px',
+                        borderRadius: '4px',
+                        minWidth: '40px',
+                        textAlign: 'center'
+                      }}>
+                        {tier}
+                      </span>
+                      <span style={{ fontSize: '14px' }}>
+                        {count} vote{count !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <span style={{ 
+                      fontWeight: 'bold', 
+                      color: '#9147ff',
+                      fontSize: '14px'
+                    }}>
+                      {percentage}%
+                    </span>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: `${percentage}%`,
+                      height: '100%',
+                      backgroundColor: getTierColor(tier),
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
