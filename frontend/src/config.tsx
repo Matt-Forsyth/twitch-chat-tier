@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { twitchExt } from './utils/twitch';
 import { apiClient } from './utils/api';
 import { TierListConfig, TierListItem, TierListResults, Suggestion } from './types';
+import TemplateBrowser from './TemplateBrowser';
 import './styles/global.css';
 
 const Config: React.FC = () => {
@@ -22,6 +23,12 @@ const Config: React.FC = () => {
   const [publishCategory, setPublishCategory] = useState('');
   const [publishTags, setPublishTags] = useState('');
   const [categories] = useState(['Gaming', 'Movies', 'TV Shows', 'Music', 'Food & Drink', 'Sports', 'Other']);
+  const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    suggestions: true,
+    itemManagement: true,
+    allTierLists: true
+  });
   
   // Form state
   const [title, setTitle] = useState('');
@@ -310,6 +317,10 @@ const Config: React.FC = () => {
   };
 
   // Template/Publishing functions
+  const toggleSection = (section: 'suggestions' | 'itemManagement' | 'allTierLists') => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const handleOpenPublishModal = (tierListId: string) => {
     setPublishModalId(tierListId);
     setPublishDescription('');
@@ -502,9 +513,14 @@ const Config: React.FC = () => {
         )}
         {error && <div className="error">{error}</div>}
         
-        <button className="button" onClick={() => setShowCreateForm(true)} style={{ marginBottom: '20px' }}>
-          Create New Tier List
-        </button>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button className="button" onClick={() => setShowCreateForm(true)} style={{ flex: 1 }}>
+            ➕ Create New Tier List
+          </button>
+          <button className="button button-secondary" onClick={() => setShowTemplateBrowser(true)} style={{ flex: 1 }}>
+            🔍 Browse Templates
+          </button>
+        </div>
 
         {activeTierList && (
           <div className="card" style={{ backgroundColor: 'rgba(145, 71, 255, 0.1)', borderColor: 'var(--twitch-purple)' }}>
@@ -528,8 +544,20 @@ const Config: React.FC = () => {
 
             {/* Viewer Suggestions */}
             <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--twitch-border)' }}>
-              <h3>Viewer Suggestions</h3>
-              {suggestions.length === 0 ? (
+              <div 
+                onClick={() => toggleSection('suggestions')} 
+                style={{ 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  userSelect: 'none'
+                }}
+              >
+                <span style={{ fontSize: '18px' }}>{expandedSections.suggestions ? '▼' : '▶'}</span>
+                <h3 style={{ margin: 0 }}>Viewer Suggestions {suggestions.length > 0 && `(${suggestions.length})`}</h3>
+              </div>
+              {expandedSections.suggestions && (suggestions.length === 0 ? (
                 <p style={{ color: 'var(--twitch-text-alt)', fontSize: '14px' }}>No pending suggestions</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
@@ -572,13 +600,26 @@ const Config: React.FC = () => {
                     </div>
                   ))}
                 </div>
-              )}
+              ))}
             </div>
 
             {/* Item Management */}
             <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--twitch-border)' }}>
-              <h3>Manage Items</h3>
-              
+              <div 
+                onClick={() => toggleSection('itemManagement')} 
+                style={{ 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  userSelect: 'none'
+                }}
+              >
+                <span style={{ fontSize: '18px' }}>{expandedSections.itemManagement ? '▼' : '▶'}</span>
+                <h3 style={{ margin: 0 }}>Manage Items ({activeTierList.items.length})</h3>
+              </div>
+              {expandedSections.itemManagement && (
+              <>
               {/* Add Item Form */}
               <div style={{ marginTop: '10px', marginBottom: '15px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '10px' }}>
@@ -679,11 +720,27 @@ const Config: React.FC = () => {
                   </div>
                 ))}
               </div>
+              </>
+              )}
             </div>
           </div>
         )}
 
-        <h2>All Tier Lists</h2>
+        <div 
+          onClick={() => toggleSection('allTierLists')} 
+          style={{ 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            userSelect: 'none',
+            marginTop: '20px'
+          }}
+        >
+          <span style={{ fontSize: '20px' }}>{expandedSections.allTierLists ? '▼' : '▶'}</span>
+          <h2 style={{ margin: 0 }}>All Tier Lists ({tierLists.length})</h2>
+        </div>
+        {expandedSections.allTierLists && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {tierLists.map((tierList) => (
             <div key={tierList._id} className="card">
@@ -788,13 +845,15 @@ const Config: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
 
-        {tierLists.length === 0 && (
-          <p style={{ textAlign: 'center', color: 'var(--twitch-text-alt)', padding: '40px' }}>
-            No tier lists yet. Create your first one!
-          </p>
+          {tierLists.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'var(--twitch-text-alt)', padding: '40px' }}>
+              No tier lists yet. Create your first one!
+            </p>
+          )}
+        </div>
         )}
+
       </div>
       
       {/* Buy Me a Coffee */}
@@ -1019,6 +1078,23 @@ const Config: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Template Browser */}
+      {showTemplateBrowser && (
+        <TemplateBrowser
+          onClose={() => setShowTemplateBrowser(false)}
+          onClone={async (templateId) => {
+            try {
+              await apiClient.cloneTemplate(templateId);
+              setShowTemplateBrowser(false);
+              await loadTierLists();
+              alert('Template cloned successfully! Find it in your tier list below.');
+            } catch (err: any) {
+              alert(`Failed to clone template: ${err.message}`);
+            }
+          }}
+        />
       )}
     </div>
   );

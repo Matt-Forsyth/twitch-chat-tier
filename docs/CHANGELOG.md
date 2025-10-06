@@ -47,17 +47,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Category and tag chips
   - Clone button with loading state
 - **Config Panel Updates**:
-  - "📤 Publish as Template" button for completed tier lists
+  - "� Browse Templates" button for streamers to discover community templates
+  - "�📤 Publish as Template" button for completed tier lists
   - "🔒 Make Private" button for published templates
   - Publish modal with description, category, and tags form
   - Display template metadata (description, category, tags) on tier list cards
   - Character counter for description field (500 max)
+  - **Collapsible Sections**: "Viewer Suggestions", "Manage Items", and "All Tier Lists" sections can now be collapsed/expanded for better organization
+  - Item counts shown in section headers (e.g., "Manage Items (12)")
 - **Panel Updates**:
   - "🔍 Browse Community Templates" button when no active tier list
   - Template browser integration with clone callback
 - Extended `TierListConfig` type with `description`, `category`, `tags[]`, `isPublic` fields
 - New `Template`, `TemplateSearchParams`, `TemplatesResponse` TypeScript interfaces
 - 10 new API client methods for template management
+
+### ✨ UI/UX Improvements
+- Config panel sections are now collapsible with ▶/▼ icons
+- Cleaner layout with more room for future features
+- Better visual hierarchy with expandable sections
+- Template browser accessible from both streamer config and viewer panel
 
 ### 📚 Documentation
 - Added comprehensive Template System User Guide
