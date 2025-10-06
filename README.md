@@ -1,88 +1,173 @@
-# Twitch Chat Tier List Extension# Twitch Chat Tier List Extension# Twitch Chat Tier List Extension
+# 🎯 Twitch Chat Tier List# Twitch Chat Tier List Extension# Twitch Chat Tier List Extension# Twitch Chat Tier List Extension
 
 
 
-An interactive Twitch.tv Extension that enables streamers to create tier lists and let viewers vote in real-time with drag-and-drop.
+**An interactive Twitch Extension that lets your viewers vote on tier lists in real-time!**
 
 
 
-## 🎮 FeaturesAn interactive Twitch.tv Extension that enables streamers to create tier lists and let viewers vote in real-time with drag-and-drop.A comprehensive Twitch.tv Extension that enables streamers to create interactive tier lists for their viewers with real-time voting and aggregation.
+Create engaging tier lists, let your chat vote on where items belong, and see the results aggregated live. Perfect for ranking games, movies, music, food, or anything else your community loves to debate!An interactive Twitch.tv Extension that enables streamers to create tier lists and let viewers vote in real-time with drag-and-drop.
 
 
+
+## ✨ Features
+
+
+
+### 🗳️ **Real-Time Voting**## 🎮 FeaturesAn interactive Twitch.tv Extension that enables streamers to create tier lists and let viewers vote in real-time with drag-and-drop.A comprehensive Twitch.tv Extension that enables streamers to create interactive tier lists for their viewers with real-time voting and aggregation.
+
+- Viewers vote by dragging items into tiers
+
+- Results aggregate automatically across all voters
+
+- Live updates as votes come in
 
 ### For Streamers
 
-- ✅ Create and manage tier lists with custom items
+### 📊 **Community Templates**
 
-- ✅ Accept/reject viewer suggestions## 🎮 Features## Features
+- Browse and clone tier lists from other streamers- ✅ Create and manage tier lists with custom items
+
+- Publish your tier lists for the community
+
+- Rate and discover popular templates- ✅ Accept/reject viewer suggestions## 🎮 Features## Features
+
+- Search by category, tags, or keywords
 
 - ✅ Add, edit, and delete items dynamically
 
-- ✅ Publish tier lists as public templates
+### 🎨 **Flexible Customization**
 
-- ✅ View real-time voting results
+- Create unlimited tier lists with custom tiers- ✅ Publish tier lists as public templates
+
+- Add images to items for visual appeal
+
+- Support for viewer-submitted suggestions- ✅ View real-time voting results
+
+- Manage multiple tier lists (draft, active, completed)
 
 - ✅ Reset votes or complete sessions### For Streamers✅ **Streamer Dashboard** - Create and manage tier lists with custom items
 
+### 👥 **Broadcaster Tools**
 
+- Easy-to-use configuration panel
 
-### For Viewers- ✅ Create and manage tier lists with custom items✅ **Viewer Voting** - Each viewer can assign tiers to items
+- View real-time results and analytics
+
+- Accept or reject viewer suggestions### For Viewers- ✅ Create and manage tier lists with custom items✅ **Viewer Voting** - Each viewer can assign tiers to items
+
+- Edit items even after publishing
 
 - ✅ Drag-and-drop tier list voting
 
+## 🚀 Quick Start
+
 - ✅ Submit item suggestions- ✅ Accept/reject viewer suggestions✅ **Real-time Updates** - WebSocket integration for live vote tracking
 
-- ✅ Toggle between "My Vote" and "Current Results"
+### For Streamers
 
-- ✅ Browse and clone community templates- ✅ Add, edit, and delete items dynamically✅ **Vote Aggregation** - Automatic calculation of average tiers
+1. Install the extension from the [Twitch Extensions Store](https://dashboard.twitch.tv/extensions)- ✅ Toggle between "My Vote" and "Current Results"
+
+2. Activate it in your Twitch Dashboard
+
+3. Open the Configuration Panel to create your first tier list- ✅ Browse and clone community templates- ✅ Add, edit, and delete items dynamically✅ **Vote Aggregation** - Automatic calculation of average tiers
+
+4. Activate it to let your viewers vote!
 
 - ✅ Rate templates with 1-5 stars
 
-- ✅ Real-time updates via WebSocket- ✅ View real-time voting results✅ **Results Display** - Visual representation of community rankings
+### For Viewers
 
+1. Watch a stream with the extension enabled- ✅ Real-time updates via WebSocket- ✅ View real-time voting results✅ **Results Display** - Visual representation of community rankings
 
+2. See the tier list panel (usually on the right side)
+
+3. Drag items into tiers to cast your vote
+
+4. Submit your rankings and watch the community results!
 
 ### Community Features (v0.0.22)- ✅ Reset votes or complete sessions✅ **Multiple Rounds** - Run multiple tier list sessions
 
+## 🎮 Use Cases
+
 - ✅ **Template Browser** - Browse tier lists from other streamers
 
-- ✅ **One-Click Clone** - Copy templates to your channel- ✅ Historical analytics (coming soon)✅ **Vote Reset** - Clear votes and start fresh
+- **Gaming**: Rank game characters, weapons, maps, or franchises
 
-- ✅ **Star Ratings** - Rate and discover the best templates
+- **Entertainment**: Rate movies, TV shows, anime, or music albums- ✅ **One-Click Clone** - Copy templates to your channel- ✅ Historical analytics (coming soon)✅ **Vote Reset** - Clear votes and start fresh
+
+- **Food & Drink**: Create food tier lists, restaurant rankings, or drink ratings
+
+- **Sports**: Rank teams, players, or memorable moments- ✅ **Star Ratings** - Rate and discover the best templates
+
+- **Community**: Let your chat decide on stream content, emotes, or inside jokes
 
 - ✅ **Categories & Tags** - Organize and find templates easily✅ **Secure Authentication** - Twitch OAuth and JWT verification
 
+## 🛠️ Tech Stack
+
 - ✅ **Search & Filter** - Find exactly what you're looking for
 
-### For Viewers✅ **Responsive Design** - Works on desktop and mobile
+- **Frontend**: React, TypeScript, Vite
 
-## 🏗️ Architecture
+- **Backend**: Node.js, Express, MongoDB### For Viewers✅ **Responsive Design** - Works on desktop and mobile
 
-- ✅ Drag-and-drop tier list voting✅ **Dark Mode** - Twitch-native styling
+- **Deployment**: Railway (backend), Twitch CDN (frontend)
 
-### Backend (Node.js + Express + MongoDB)
+- **Real-Time**: WebSocket with automatic reconnection## 🏗️ Architecture
 
-- **Server**: Express.js REST API with 25+ endpoints- ✅ Submit item suggestions
 
-- **WebSocket**: Real-time communication using `ws`
+
+## 📖 Documentation- ✅ Drag-and-drop tier list voting✅ **Dark Mode** - Twitch-native styling
+
+
+
+For developers and contributors, see the `/docs` folder:### Backend (Node.js + Express + MongoDB)
+
+- **ARCHITECTURE.md** - System design and component overview
+
+- **API_REFERENCE.md** - Complete API endpoint documentation- **Server**: Express.js REST API with 25+ endpoints- ✅ Submit item suggestions
+
+- **FRONTEND_GUIDE.md** - Frontend components and state management
+
+- **DEPLOYMENT.md** - Build and deployment instructions- **WebSocket**: Real-time communication using `ws`
+
+- **CHANGELOG.md** - Version history and release notes
 
 - **Database**: MongoDB with Mongoose ODM- ✅ Toggle between "My Vote" and "Current Results"## Architecture
 
+## 🤝 Support
+
 - **Authentication**: Twitch Extension JWT verification
 
-- **Security**: Helmet, CORS, rate limiting- ✅ Real-time updates via WebSocket
+- **Issues**: [GitHub Issues](https://github.com/Matt-Forsyth/twitch-chat-tier/issues)
 
-- **Deployment**: Railway (auto-deploy from GitHub)
+- **Donations**: [Buy Me a Coffee](https://buymeacoffee.com/matthewforsyth)- **Security**: Helmet, CORS, rate limiting- ✅ Real-time updates via WebSocket
 
-- ✅ Mobile-friendly interface### Backend (Node.js + Express + MongoDB)
 
-### Frontend (React + TypeScript)
 
-- **Framework**: React 18 with TypeScript- **Server**: Express.js REST API
+## 📝 License- **Deployment**: Railway (auto-deploy from GitHub)
 
-- **Build Tool**: Vite for fast development
 
-- **Drag & Drop**: react-beautiful-dnd## 🚀 Quick Start- **WebSocket**: Real-time communication using `ws`
+
+MIT License - See LICENSE file for details- ✅ Mobile-friendly interface### Backend (Node.js + Express + MongoDB)
+
+
+
+## 🎉 Credits### Frontend (React + TypeScript)
+
+
+
+Created by [Matthew Forsyth](https://github.com/Matt-Forsyth)- **Framework**: React 18 with TypeScript- **Server**: Express.js REST API
+
+
+
+---- **Build Tool**: Vite for fast development
+
+
+
+**Enjoy creating tier lists with your community! 🎯**- **Drag & Drop**: react-beautiful-dnd## 🚀 Quick Start- **WebSocket**: Real-time communication using `ws`
+
 
 - **Styling**: CSS with Twitch design tokens
 

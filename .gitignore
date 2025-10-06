@@ -35,8 +35,8 @@ coverage/
 .tmp/
 
 # Documentation
-docs/archive/
+docs/
+!docs/CHANGELOG.md
 
-# Deployment packages (keep only latest)
-frontend/twitch-extension-v*.zip
-!frontend/twitch-extension-v0.0.21-fixed.zip
+# Deployment packages
+deployments/
