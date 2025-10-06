@@ -114,7 +114,11 @@ router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest,
     // Mark tier list as public
     tierList.isPublic = true;
     if (description) tierList.description = description;
-    if (category) tierList.category = category;
+    if (category && category.trim()) {
+      tierList.category = category;
+    } else {
+      tierList.category = undefined;
+    }
     if (tags) tierList.tags = Array.isArray(tags) ? tags : [tags];
     await tierList.save();
 
@@ -127,7 +131,7 @@ router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest,
       template.description = description || template.description;
       template.items = tierList.items;
       template.tiers = tierList.tiers;
-      template.category = category || template.category;
+      template.category = (category && category.trim()) ? category : template.category;
       template.tags = tags ? (Array.isArray(tags) ? tags : [tags]) : template.tags;
       template.isPublic = true;
       await template.save();
@@ -141,7 +145,7 @@ router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest,
         description,
         items: tierList.items,
         tiers: tierList.tiers,
-        category,
+        category: (category && category.trim()) ? category : undefined,
         tags: tags ? (Array.isArray(tags) ? tags : [tags]) : [],
         isPublic: true,
       });
