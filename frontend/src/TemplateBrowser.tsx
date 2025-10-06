@@ -84,11 +84,16 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
       setError(null);
       
       if (onClone) {
-        onClone(result.tierList._id);
+        // Await the onClone callback since it's async
+        await onClone(result.tierList._id);
       }
       
-      alert(`Template "${template.title}" cloned successfully! Check your tier lists.`);
+      // Only show alert if onClone didn't handle the success message
+      if (!onClone) {
+        alert(`Template "${template.title}" cloned successfully! Check your tier lists.`);
+      }
     } catch (err: any) {
+      console.error('[TemplateBrowser] Clone error:', err);
       setError(err.message || 'Failed to clone template');
     } finally {
       setCloning(null);

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.2] - 2025-10-06 (Hotfix)
+
+### 🐛 Fixed
+- **Better Error Handling for Template Clone**: Improved error handling and logging when cloning templates
+  - Template Browser now properly awaits the async `onClone` callback
+  - Added detailed console logging throughout the clone process for easier debugging
+  - Added axios response interceptor to properly extract server error messages
+  - Error messages now show the actual server error instead of generic "Request failed" message
+
+### 🔧 Technical
+- Frontend: Added response interceptor in ApiClient to handle errors consistently
+- Frontend: TemplateBrowser now awaits the onClone callback and catches errors properly
+- Frontend: Added console.log statements throughout clone flow: template browser → config → API client → server
+- Frontend: Improved error message extraction from axios errors (checks err.response.data.error)
+
+---
+
 ## [0.1.1] - 2025-10-06 (Hotfix)
 
 ### 🐛 Fixed

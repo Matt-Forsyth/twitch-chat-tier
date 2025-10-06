@@ -19,6 +19,28 @@ class ApiClient {
       }
       return config;
     });
+
+    // Add response interceptor to handle errors consistently
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // Log the error for debugging
+        console.error('[ApiClient] Request failed:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+
+        // Enhance error with server message if available
+        if (error.response?.data?.error) {
+          error.message = error.response.data.error;
+        }
+        
+        return Promise.reject(error);
+      }
+    );
   }
 
   setToken(token: string) {

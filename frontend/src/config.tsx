@@ -1267,12 +1267,17 @@ const Config: React.FC = () => {
           onClose={() => setShowTemplateBrowser(false)}
           onClone={async (templateId) => {
             try {
+              console.log('[Config] Starting clone process for template:', templateId);
               await apiClient.cloneTemplate(templateId);
+              console.log('[Config] Clone successful, closing browser...');
               setShowTemplateBrowser(false);
+              console.log('[Config] Reloading tier lists...');
               await loadTierLists();
+              console.log('[Config] Tier lists reloaded successfully');
               setSuccessMessage('Template cloned successfully! Find it in your tier list below.');
             } catch (err: any) {
-              setError(`Failed to clone template: ${err.message}`);
+              console.error('[Config] Clone error:', err);
+              setError(`Failed to clone template: ${err.message || err.response?.data?.error || 'Unknown error'}`);
             }
           }}
         />
