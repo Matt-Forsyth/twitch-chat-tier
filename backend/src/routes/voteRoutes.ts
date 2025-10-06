@@ -26,6 +26,49 @@ router.post('/', authenticateTwitch, async (req: AuthRequest, res: Response) => 
       return;
     }
     
+    console.log('[Vote] Submit/update vote:', {
+      tierListId,
+      userId,
+      newVotesCount: votes.length
+    });
+    
+    // Find existing vote if any
+    const existingVote = await Vote.findOne({ tierListId, userId });
+    
+    let finalVotes = votes;
+    
+    // If user has existing votes, merge them with new votes
+    if (existingVote && existingVote.votes) {
+      console.log('[Vote] Found existing vote with', existingVote.votes.length, 'items');
+      
+      // Create a map of new votes for quick lookup
+      const newVotesMap = new Map(votes.map((v: any) => [v.itemId, v.tier]));
+      
+      // Start with existing votes
+      const mergedVotesMap = new Map(
+        existingVote.votes.map((v: any) => [v.itemId, v.tier])
+      );
+      
+      // Override/add new votes
+      newVotesMap.forEach((tier, itemId) => {
+        mergedVotesMap.set(itemId, tier);
+      });
+      
+      // Convert back to array
+      finalVotes = Array.from(mergedVotesMap.entries()).map(([itemId, tier]) => ({
+        itemId,
+        tier
+      }));
+      
+      console.log('[Vote] Merged votes:', {
+        existingCount: existingVote.votes.length,
+        newCount: votes.length,
+        finalCount: finalVotes.length
+      });
+    } else {
+      console.log('[Vote] No existing vote, creating new');
+    }
+    
     // Upsert vote (update if exists, create if not)
     const vote = await Vote.findOneAndUpdate(
       { tierListId, userId },
@@ -34,10 +77,12 @@ router.post('/', authenticateTwitch, async (req: AuthRequest, res: Response) => 
         channelId,
         userId,
         username: userId, // In production, fetch actual username from Twitch
-        votes,
+        votes: finalVotes,
       },
       { upsert: true, new: true }
     );
+    
+    console.log('[Vote] Vote saved successfully with', vote.votes.length, 'items');
     
     res.json(vote);
   } catch (error) {
