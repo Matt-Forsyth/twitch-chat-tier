@@ -13,11 +13,14 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
-  const [sort, setSort] = useState<'rating' | 'usage' | 'recent'>('rating');
+  const [sort, setSort] = useState<'popularity' | 'usage' | 'recent'>('popularity');
   const [categories, setCategories] = useState<string[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [skip, setSkip] = useState(0);
   const [cloning, setCloning] = useState<string | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
+  const [voting, setVoting] = useState<string | null>(null);
+  const [userVotes, setUserVotes] = useState<Map<string, 'up' | 'down'>>(new Map());
 
   useEffect(() => {
     loadCategories();
@@ -92,23 +95,27 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
     }
   };
 
+  const handleVote = async (template: Template, vote: 'up' | 'down') => {
+    try {
+      setVoting(template._id);
+      await apiClient.voteTemplate(template._id, vote);
+      
+      // Update local state
+      setUserVotes(new Map(userVotes.set(template._id, vote)));
+      
+      // Reload templates to get updated vote counts
+      await loadTemplates();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to vote');
+    } finally {
+      setVoting(null);
+    }
+  };
+
   const handleLoadMore = () => {
     setSkip(skip + 12);
     loadTemplates(true);
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      if (i <= Math.floor(rating)) {
-        stars.push(<span key={i} style={{ color: '#ffd700' }}>★</span>);
-      } else if (i === Math.ceil(rating) && rating % 1 !== 0) {
-        stars.push(<span key={i} style={{ color: '#ffd700' }}>⯨</span>);
-      } else {
-        stars.push(<span key={i} style={{ color: '#666' }}>☆</span>);
-      }
-    }
-    return stars;
   };
 
   return (
@@ -188,7 +195,7 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
             onChange={(e) => setSort(e.target.value as any)}
             style={{ flex: '0 1 150px' }}
           >
-            <option value="rating">Top Rated</option>
+            <option value="popularity">Most Popular</option>
             <option value="usage">Most Used</option>
             <option value="recent">Most Recent</option>
           </select>
@@ -250,16 +257,46 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
                       </p>
                     )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px' }}>
-                      {renderStars(template.averageRating)}
-                      <span style={{ color: 'var(--twitch-text-alt)', marginLeft: '5px' }}>
-                        {template.averageRating > 0 ? template.averageRating.toFixed(1) : 'No ratings'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+                      <button
+                        onClick={() => handleVote(template, 'up')}
+                        disabled={voting === template._id}
+                        style={{
+                          background: userVotes.get(template._id) === 'up' ? 'var(--twitch-purple)' : 'rgba(255, 255, 255, 0.1)',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '5px 10px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          color: '#fff',
+                          fontSize: '14px',
+                        }}
+                      >
+                        👍 {template.upvotes}
+                      </button>
+                      <button
+                        onClick={() => handleVote(template, 'down')}
+                        disabled={voting === template._id}
+                        style={{
+                          background: userVotes.get(template._id) === 'down' ? '#ef5350' : 'rgba(255, 255, 255, 0.1)',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '5px 10px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          color: '#fff',
+                          fontSize: '14px',
+                        }}
+                      >
+                        👎 {template.downvotes}
+                      </button>
+                      <span style={{ color: 'var(--twitch-text-alt)', fontSize: '12px', marginLeft: 'auto' }}>
+                        Score: {template.voteScore}
                       </span>
-                      {template.totalRatings > 0 && (
-                        <span style={{ color: 'var(--twitch-text-alt)', fontSize: '12px' }}>
-                          ({template.totalRatings})
-                        </span>
-                      )}
                     </div>
 
                     <div style={{ display: 'flex', gap: '10px', fontSize: '12px', color: 'var(--twitch-text-alt)' }}>
@@ -297,14 +334,23 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
                       </div>
                     )}
 
-                    <button
-                      className="button"
-                      onClick={() => handleClone(template)}
-                      disabled={cloning === template._id}
-                      style={{ marginTop: 'auto' }}
-                    >
-                      {cloning === template._id ? 'Cloning...' : '📋 Clone Template'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '5px', marginTop: 'auto' }}>
+                      <button
+                        className="button button-secondary"
+                        onClick={() => setPreviewTemplate(template)}
+                        style={{ flex: 1 }}
+                      >
+                        👁️ Preview
+                      </button>
+                      <button
+                        className="button"
+                        onClick={() => handleClone(template)}
+                        disabled={cloning === template._id}
+                        style={{ flex: 1 }}
+                      >
+                        {cloning === template._id ? 'Cloning...' : '📋 Clone'}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -324,6 +370,122 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
           )}
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {previewTemplate && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1001,
+          padding: '20px',
+        }}>
+          <div style={{
+            backgroundColor: 'var(--twitch-background)',
+            borderRadius: '8px',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            padding: '20px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h2 style={{ margin: 0 }}>{previewTemplate.title}</h2>
+              <button
+                className="button button-secondary"
+                onClick={() => setPreviewTemplate(null)}
+                style={{ padding: '5px 15px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--twitch-text-alt)', marginBottom: '15px' }}>
+              by {previewTemplate.channelName}
+            </p>
+
+            {previewTemplate.description && (
+              <p style={{ marginBottom: '15px' }}>{previewTemplate.description}</p>
+            )}
+
+            <div style={{ marginBottom: '15px' }}>
+              <strong>Tiers:</strong>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '5px', flexWrap: 'wrap' }}>
+                {previewTemplate.tiers.map((tier, i) => (
+                  <span key={i} style={{
+                    backgroundColor: 'var(--twitch-purple)',
+                    padding: '5px 10px',
+                    borderRadius: '4px',
+                  }}>
+                    {tier}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <strong>Items ({previewTemplate.items.length}):</strong>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                gap: '10px',
+                marginTop: '10px',
+              }}>
+                {previewTemplate.items.map((item) => (
+                  <div key={item.id} style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    textAlign: 'center',
+                  }}>
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        style={{
+                          width: '100%',
+                          height: '80px',
+                          objectFit: 'cover',
+                          borderRadius: '4px',
+                          marginBottom: '5px',
+                        }}
+                      />
+                    )}
+                    <div style={{ fontSize: '13px' }}>{item.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                className="button"
+                onClick={() => {
+                  handleClone(previewTemplate);
+                  setPreviewTemplate(null);
+                }}
+                disabled={cloning === previewTemplate._id}
+                style={{ flex: 1 }}
+              >
+                {cloning === previewTemplate._id ? 'Cloning...' : '📋 Clone This Template'}
+              </button>
+              <button
+                className="button button-secondary"
+                onClick={() => setPreviewTemplate(null)}
+                style={{ flex: 1 }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

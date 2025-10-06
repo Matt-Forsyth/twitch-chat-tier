@@ -16,14 +16,15 @@ export interface ITemplate extends Document {
   tags: string[];
   isPublic: boolean;
   usageCount: number;
-  ratings: Array<{
+  votes: Array<{
     userId: string;
     username: string;
-    rating: number; // 1-5
+    vote: 'up' | 'down'; // thumbs up or down
     createdAt: Date;
   }>;
-  averageRating: number;
-  totalRatings: number;
+  upvotes: number;
+  downvotes: number;
+  voteScore: number; // upvotes - downvotes for sorting
   createdAt: Date;
   updatedAt: Date;
 }
@@ -79,46 +80,47 @@ const TemplateSchema = new Schema({
     default: 0,
     index: true,
   },
-  ratings: [{
+  votes: [{
     userId: { type: String, required: true },
     username: { type: String, required: true },
-    rating: { 
-      type: Number, 
+    vote: { 
+      type: String, 
       required: true,
-      min: 1,
-      max: 5,
+      enum: ['up', 'down'],
     },
     createdAt: { type: Date, default: Date.now },
   }],
-  averageRating: {
+  upvotes: {
     type: Number,
     default: 0,
     index: true,
   },
-  totalRatings: {
+  downvotes: {
     type: Number,
     default: 0,
+  },
+  voteScore: {
+    type: Number,
+    default: 0,
+    index: true,
   },
 }, {
   timestamps: true,
 });
 
 // Index for searching and sorting
-TemplateSchema.index({ isPublic: 1, averageRating: -1, usageCount: -1 });
+TemplateSchema.index({ isPublic: 1, voteScore: -1, usageCount: -1 });
 TemplateSchema.index({ isPublic: 1, createdAt: -1 });
 TemplateSchema.index({ category: 1, isPublic: 1 });
 TemplateSchema.index({ tags: 1, isPublic: 1 });
 
-// Method to calculate average rating
-TemplateSchema.methods.updateAverageRating = function() {
-  if (this.ratings.length === 0) {
-    this.averageRating = 0;
-    this.totalRatings = 0;
-  } else {
-    const sum = this.ratings.reduce((acc: number, r: any) => acc + r.rating, 0);
-    this.averageRating = sum / this.ratings.length;
-    this.totalRatings = this.ratings.length;
-  }
+// Method to calculate vote scores
+TemplateSchema.methods.updateVoteScore = function() {
+  const upvotes = this.votes.filter((v: any) => v.vote === 'up').length;
+  const downvotes = this.votes.filter((v: any) => v.vote === 'down').length;
+  this.upvotes = upvotes;
+  this.downvotes = downvotes;
+  this.voteScore = upvotes - downvotes;
 };
 
 export default mongoose.model<ITemplate>('Template', TemplateSchema);

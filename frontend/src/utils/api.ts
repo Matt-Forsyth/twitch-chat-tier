@@ -162,7 +162,7 @@ class ApiClient {
     category?: string;
     tags?: string;
     search?: string;
-    sort?: 'rating' | 'usage' | 'recent';
+    sort?: 'popularity' | 'usage' | 'recent';
     limit?: number;
     skip?: number;
   }) {
@@ -206,13 +206,13 @@ class ApiClient {
     return response.data;
   }
 
-  async rateTemplate(id: string, rating: number) {
-    const response = await this.client.post(`/templates/${id}/rate`, { rating });
+  async voteTemplate(id: string, vote: 'up' | 'down') {
+    const response = await this.client.post(`/templates/${id}/vote`, { vote });
     return response.data;
   }
 
-  async getMyRating(id: string) {
-    const response = await this.client.get(`/templates/${id}/myrating`);
+  async getMyVote(id: string) {
+    const response = await this.client.get(`/templates/${id}/myvote`);
     return response.data;
   }
 

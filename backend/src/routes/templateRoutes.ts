@@ -46,7 +46,8 @@ router.get('/', async (req: Request, res: Response) => {
     let sortQuery: any = {};
     switch (sort) {
       case 'rating':
-        sortQuery = { averageRating: -1, totalRatings: -1 };
+      case 'popularity':
+        sortQuery = { voteScore: -1, usageCount: -1 };
         break;
       case 'usage':
         sortQuery = { usageCount: -1 };
@@ -55,14 +56,14 @@ router.get('/', async (req: Request, res: Response) => {
         sortQuery = { createdAt: -1 };
         break;
       default:
-        sortQuery = { averageRating: -1, totalRatings: -1 };
+        sortQuery = { voteScore: -1, usageCount: -1 };
     }
 
     const templates = await Template.find(query)
       .sort(sortQuery)
       .limit(Number(limit))
       .skip(Number(skip))
-      .select('-ratings.userId'); // Hide user IDs from public view
+      .select('-votes.userId'); // Hide user IDs from public view
 
     const total = await Template.countDocuments(query);
 
@@ -328,13 +329,13 @@ router.post('/:id/clone', authenticateTwitch, async (req: AuthRequest, res: Resp
   }
 });
 
-// Rate a template
-router.post('/:id/rate', authenticateTwitch, async (req: AuthRequest, res: Response) => {
+// Vote on a template (thumbs up/down)
+router.post('/:id/vote', authenticateTwitch, async (req: AuthRequest, res: Response) => {
   try {
-    const { rating } = req.body;
+    const { vote } = req.body;
 
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    if (!vote || (vote !== 'up' && vote !== 'down')) {
+      return res.status(400).json({ error: 'Vote must be "up" or "down"' });
     }
 
     const template = await Template.findById(req.params.id);
@@ -344,55 +345,49 @@ router.post('/:id/rate', authenticateTwitch, async (req: AuthRequest, res: Respo
     }
 
     if (!template.isPublic) {
-      return res.status(403).json({ error: 'Cannot rate private template' });
+      return res.status(403).json({ error: 'Cannot vote on private template' });
     }
 
     const userId = req.twitchAuth!.user_id;
 
-    // Check if user already rated
-    const existingRatingIndex = template.ratings.findIndex(
-      r => r.userId === userId
+    // Check if user already voted
+    const existingVoteIndex = template.votes.findIndex(
+      (v: any) => v.userId === userId
     );
 
-    if (existingRatingIndex >= 0) {
-      // Update existing rating
-      template.ratings[existingRatingIndex].rating = rating;
-      template.ratings[existingRatingIndex].createdAt = new Date();
+    if (existingVoteIndex >= 0) {
+      // Update existing vote
+      template.votes[existingVoteIndex].vote = vote;
+      template.votes[existingVoteIndex].createdAt = new Date();
     } else {
-      // Add new rating
-      template.ratings.push({
+      // Add new vote
+      template.votes.push({
         userId,
         username: userId,
-        rating,
+        vote,
         createdAt: new Date(),
-      });
+      } as any);
     }
 
-    // Update average rating
-    if (template.ratings.length === 0) {
-      template.averageRating = 0;
-      template.totalRatings = 0;
-    } else {
-      const sum = template.ratings.reduce((acc, r) => acc + r.rating, 0);
-      template.averageRating = sum / template.ratings.length;
-      template.totalRatings = template.ratings.length;
-    }
+    // Update vote counts using the method
+    (template as any).updateVoteScore();
     
     await template.save();
 
     res.json({ 
-      message: 'Rating submitted successfully', 
-      averageRating: template.averageRating,
-      totalRatings: template.totalRatings,
+      message: 'Vote submitted successfully', 
+      upvotes: template.upvotes,
+      downvotes: template.downvotes,
+      voteScore: template.voteScore,
     });
   } catch (error: any) {
-    console.error('[Templates] Rate error:', error);
-    res.status(500).json({ error: 'Failed to submit rating' });
+    console.error('[Templates] Vote error:', error);
+    res.status(500).json({ error: 'Failed to submit vote' });
   }
 });
 
-// Get user's rating for a template
-router.get('/:id/myrating', authenticateTwitch, async (req: AuthRequest, res: Response) => {
+// Get user's vote for a template
+router.get('/:id/myvote', authenticateTwitch, async (req: AuthRequest, res: Response) => {
   try {
     const template = await Template.findById(req.params.id);
 
@@ -401,16 +396,16 @@ router.get('/:id/myrating', authenticateTwitch, async (req: AuthRequest, res: Re
     }
 
     const userId = req.twitchAuth!.user_id;
-    const userRating = template.ratings.find(r => r.userId === userId);
+    const userVote = template.votes.find((v: any) => v.userId === userId);
 
-    if (!userRating) {
-      return res.json({ rating: null });
+    if (!userVote) {
+      return res.json({ vote: null });
     }
 
-    res.json({ rating: userRating.rating });
+    res.json({ vote: userVote.vote });
   } catch (error: any) {
-    console.error('[Templates] Get rating error:', error);
-    res.status(500).json({ error: 'Failed to fetch rating' });
+    console.error('[Templates] Get vote error:', error);
+    res.status(500).json({ error: 'Failed to fetch vote' });
   }
 });
 

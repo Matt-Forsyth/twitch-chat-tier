@@ -109,8 +109,9 @@ export interface Template {
   tags: string[];
   isPublic: boolean;
   usageCount: number;
-  averageRating: number;
-  totalRatings: number;
+  upvotes: number;
+  downvotes: number;
+  voteScore: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -119,7 +120,7 @@ export interface TemplateSearchParams {
   category?: string;
   tags?: string;
   search?: string;
-  sort?: 'rating' | 'usage' | 'recent';
+  sort?: 'popularity' | 'usage' | 'recent';
   limit?: number;
   skip?: number;
 }
