@@ -1,192 +1,381 @@
-# Twitch Chat Tier List Extension
+# Twitch Chat Tier List Extension# Twitch Chat Tier List Extension
 
-A comprehensive Twitch.tv Extension that enables streamers to create interactive tier lists for their viewers with real-time voting and aggregation.
 
-## Features
 
-✅ **Streamer Dashboard** - Create and manage tier lists with custom items
-✅ **Viewer Voting** - Each viewer can assign tiers to items
-✅ **Real-time Updates** - WebSocket integration for live vote tracking
-✅ **Vote Aggregation** - Automatic calculation of average tiers
-✅ **Results Display** - Visual representation of community rankings
-✅ **Multiple Rounds** - Run multiple tier list sessions
-✅ **Vote Reset** - Clear votes and start fresh
+An interactive Twitch.tv Extension that enables streamers to create tier lists and let viewers vote in real-time with drag-and-drop.A comprehensive Twitch.tv Extension that enables streamers to create interactive tier lists for their viewers with real-time voting and aggregation.
+
+
+
+## 🎮 Features## Features
+
+
+
+### For Streamers✅ **Streamer Dashboard** - Create and manage tier lists with custom items
+
+- ✅ Create and manage tier lists with custom items✅ **Viewer Voting** - Each viewer can assign tiers to items
+
+- ✅ Accept/reject viewer suggestions✅ **Real-time Updates** - WebSocket integration for live vote tracking
+
+- ✅ Add, edit, and delete items dynamically✅ **Vote Aggregation** - Automatic calculation of average tiers
+
+- ✅ View real-time voting results✅ **Results Display** - Visual representation of community rankings
+
+- ✅ Reset votes or complete sessions✅ **Multiple Rounds** - Run multiple tier list sessions
+
+- ✅ Historical analytics (coming soon)✅ **Vote Reset** - Clear votes and start fresh
+
 ✅ **Secure Authentication** - Twitch OAuth and JWT verification
-✅ **Responsive Design** - Works on desktop and mobile
-✅ **Dark Mode** - Twitch-native styling
 
-## Architecture
+### For Viewers✅ **Responsive Design** - Works on desktop and mobile
 
-### Backend (Node.js + Express + MongoDB)
+- ✅ Drag-and-drop tier list voting✅ **Dark Mode** - Twitch-native styling
+
+- ✅ Submit item suggestions
+
+- ✅ Toggle between "My Vote" and "Current Results"## Architecture
+
+- ✅ Real-time updates via WebSocket
+
+- ✅ Mobile-friendly interface### Backend (Node.js + Express + MongoDB)
+
 - **Server**: Express.js REST API
-- **WebSocket**: Real-time communication using `ws`
+
+## 🚀 Quick Start- **WebSocket**: Real-time communication using `ws`
+
 - **Database**: MongoDB with Mongoose ODM
-- **Authentication**: Twitch Extension JWT verification
-- **Security**: Helmet, CORS, rate limiting
 
-### Frontend (React + TypeScript)
+### Prerequisites- **Authentication**: Twitch Extension JWT verification
+
+- Node.js 18+- **Security**: Helmet, CORS, rate limiting
+
+- MongoDB database
+
+- Twitch Developer account### Frontend (React + TypeScript)
+
 - **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite for fast development
+
+### Installation- **Build Tool**: Vite for fast development
+
 - **State Management**: React hooks + Zustand (optional)
-- **Styling**: CSS with Twitch design tokens
-- **Views**: Config panel, Viewer panel, Video overlay, Mobile
 
-## Project Structure
+1. **Clone the repository**- **Styling**: CSS with Twitch design tokens
+
+   ```bash- **Views**: Config panel, Viewer panel, Video overlay, Mobile
+
+   git clone https://github.com/Matt-Forsyth/twitch-chat-tier.git
+
+   cd twitch-chat-tier## Project Structure
+
+   ```
 
 ```
-twitch-chat-tier/
-├── backend/
-│   ├── src/
-│   │   ├── config/
+
+2. **Install dependencies**twitch-chat-tier/
+
+   ```bash├── backend/
+
+   npm run install:all│   ├── src/
+
+   ```│   │   ├── config/
+
 │   │   │   └── database.ts          # MongoDB connection
-│   │   ├── models/
-│   │   │   ├── TierListConfig.ts    # Tier list schema
-│   │   │   └── Vote.ts              # Vote schema
+
+3. **Configure environment**│   │   ├── models/
+
+   - Backend: Copy `backend/.env.example` to `backend/.env` and configure│   │   │   ├── TierListConfig.ts    # Tier list schema
+
+   - Frontend: Create `frontend/.env.production` with API URLs│   │   │   └── Vote.ts              # Vote schema
+
 │   │   ├── routes/
-│   │   │   ├── authRoutes.ts        # Authentication endpoints
-│   │   │   ├── tierListRoutes.ts    # Tier list CRUD
-│   │   │   └── voteRoutes.ts        # Voting endpoints
-│   │   ├── services/
+
+4. **Development**│   │   │   ├── authRoutes.ts        # Authentication endpoints
+
+   ```bash│   │   │   ├── tierListRoutes.ts    # Tier list CRUD
+
+   npm run dev│   │   │   └── voteRoutes.ts        # Voting endpoints
+
+   ```│   │   ├── services/
+
 │   │   │   └── twitchAuth.ts        # Twitch API integration
-│   │   ├── middleware/
-│   │   │   ├── auth.ts              # Auth middleware
-│   │   │   └── errorHandler.ts      # Error handling
-│   │   ├── websocket/
+
+5. **Production build**│   │   ├── middleware/
+
+   ```bash│   │   │   ├── auth.ts              # Auth middleware
+
+   npm run build│   │   │   └── errorHandler.ts      # Error handling
+
+   ```│   │   ├── websocket/
+
 │   │   │   └── websocketHandler.ts  # WebSocket logic
-│   │   └── server.ts                # Main server file
+
+## 📦 Deployment│   │   └── server.ts                # Main server file
+
 │   ├── .env.example                 # Environment variables template
-│   ├── package.json
-│   └── tsconfig.json
-│
+
+### Backend (Railway)│   ├── package.json
+
+- Automatically deploys from GitHub main branch│   └── tsconfig.json
+
+- Environment variables configured in Railway dashboard│
+
 ├── frontend/
-│   ├── src/
-│   │   ├── utils/
-│   │   │   ├── api.ts               # API client
-│   │   │   ├── websocket.ts         # WebSocket client
+
+### Frontend (Twitch)│   ├── src/
+
+- Build production package: `npm run build:frontend`│   │   ├── utils/
+
+- Upload `frontend/twitch-extension-v0.0.21-fixed.zip` to Twitch Developer Console│   │   │   ├── api.ts               # API client
+
+- Test in hosted test mode before going live│   │   │   ├── websocket.ts         # WebSocket client
+
 │   │   │   └── twitch.ts            # Twitch Extension Helper
-│   │   ├── styles/
+
+## 📚 Documentation│   │   ├── styles/
+
 │   │   │   └── global.css           # Global styles
-│   │   ├── types.ts                 # TypeScript types
+
+All documentation is in the `/docs` folder:│   │   ├── types.ts                 # TypeScript types
+
 │   │   ├── config.tsx               # Broadcaster config panel
-│   │   ├── panel.tsx                # Viewer panel
-│   │   ├── video_component.tsx      # Video component
-│   │   ├── video_overlay.tsx        # Video overlay
-│   │   └── mobile.tsx               # Mobile view
+
+- **[Setup Guide](docs/guides/SETUP_GUIDE.md)** - Initial setup and configuration│   │   ├── panel.tsx                # Viewer panel
+
+- **[API Documentation](docs/guides/API_DOCUMENTATION.md)** - Complete API reference│   │   ├── video_component.tsx      # Video component
+
+- **[Release Notes](docs/releases/RELEASE_NOTES_v0.0.21.md)** - Latest version features│   │   ├── video_overlay.tsx        # Video overlay
+
+- **[Implementation Guide](docs/releases/IMPLEMENTATION_COMPLETE_v0.0.21.md)** - Technical details│   │   └── mobile.tsx               # Mobile view
+
 │   ├── *.html                       # Entry HTML files
-│   ├── package.json
+
+## 🏗️ Architecture│   ├── package.json
+
 │   ├── tsconfig.json
-│   └── vite.config.ts
-│
-├── package.json                     # Root package.json
-└── README.md                        # This file
-```
 
-## Database Schema
+### Backend│   └── vite.config.ts
 
-### TierListConfig Collection
-```javascript
-{
-  _id: ObjectId,
-  channelId: String,           // Twitch channel ID
-  channelName: String,          // Twitch channel name
+- **Runtime**: Node.js 18+ with TypeScript│
+
+- **Framework**: Express.js├── package.json                     # Root package.json
+
+- **Database**: MongoDB with Mongoose└── README.md                        # This file
+
+- **WebSocket**: ws library for real-time updates```
+
+- **Authentication**: Twitch JWT verification
+
+- **Deployment**: Railway## Database Schema
+
+
+
+### Frontend### TierListConfig Collection
+
+- **Framework**: React 18 with TypeScript```javascript
+
+- **Build Tool**: Vite{
+
+- **Drag & Drop**: react-beautiful-dnd  _id: ObjectId,
+
+- **API Client**: Axios  channelId: String,           // Twitch channel ID
+
+- **Deployment**: Twitch CDN  channelName: String,          // Twitch channel name
+
   title: String,                // Tier list title
-  items: [{
+
+## 🎯 Current Version  items: [{
+
     id: String,
-    name: String,
-    imageUrl: String (optional)
-  }],
-  tiers: [String],              // e.g., ['S', 'A', 'B', 'C', 'D', 'F']
-  status: String,               // 'draft' | 'active' | 'completed'
+
+**v0.0.21** - Streamer Item Management    name: String,
+
+- Accept/reject viewer suggestions with one click    imageUrl: String (optional)
+
+- Add new items to active tier lists  }],
+
+- Edit item names and images inline  tiers: [String],              // e.g., ['S', 'A', 'B', 'C', 'D', 'F']
+
+- Delete items with automatic vote cleanup  status: String,               // 'draft' | 'active' | 'completed'
+
   startTime: Date,
-  endTime: Date,
+
+[Full Release Notes →](docs/releases/RELEASE_NOTES_v0.0.21.md)  endTime: Date,
+
   allowRealTimeUpdates: Boolean,
-  createdAt: Date,
+
+## 📊 Project Structure  createdAt: Date,
+
   updatedAt: Date
-}
-```
 
-### Vote Collection
-```javascript
-{
-  _id: ObjectId,
-  tierListId: String,           // Reference to TierListConfig
-  channelId: String,
-  userId: String,               // Twitch user ID
-  username: String,
-  votes: [{
-    itemId: String,
-    tier: String
-  }],
-  createdAt: Date,
-  updatedAt: Date
-}
-```
+```}
 
-**Indexes:**
-- `TierListConfig`: `{channelId: 1, status: 1}`
-- `Vote`: `{tierListId: 1, userId: 1}` (unique)
+twitch-chat-tier/```
 
-## Setup Instructions
+├── backend/               # Node.js + Express backend
 
-### Prerequisites
-- Node.js 18+ and npm
-- MongoDB (local or Atlas)
+│   ├── src/### Vote Collection
+
+│   │   ├── config/       # Database configuration```javascript
+
+│   │   ├── models/       # MongoDB models{
+
+│   │   ├── routes/       # API routes  _id: ObjectId,
+
+│   │   ├── middleware/   # Auth & error handling  tierListId: String,           // Reference to TierListConfig
+
+│   │   ├── services/     # Twitch API integration  channelId: String,
+
+│   │   └── websocket/    # WebSocket handlers  userId: String,               // Twitch user ID
+
+│   └── package.json  username: String,
+
+│  votes: [{
+
+├── frontend/             # React + TypeScript frontend    itemId: String,
+
+│   ├── src/    tier: String
+
+│   │   ├── utils/        # API & WebSocket clients  }],
+
+│   │   ├── styles/       # CSS styles  createdAt: Date,
+
+│   │   ├── config.tsx    # Broadcaster dashboard  updatedAt: Date
+
+│   │   ├── panel.tsx     # Viewer voting interface}
+
+│   │   └── types.ts      # TypeScript types```
+
+│   ├── dist/             # Production build
+
+│   └── package.json**Indexes:**
+
+│- `TierListConfig`: `{channelId: 1, status: 1}`
+
+├── docs/                 # Documentation- `Vote`: `{tierListId: 1, userId: 1}` (unique)
+
+│   ├── guides/          # Setup & API docs
+
+│   ├── releases/        # Version release notes## Setup Instructions
+
+│   └── archive/         # Historical docs
+
+│### Prerequisites
+
+└── package.json         # Root package scripts- Node.js 18+ and npm
+
+```- MongoDB (local or Atlas)
+
 - Twitch Developer Account
-- VS Code (recommended)
 
-### 1. Install Dependencies
+## 🔧 Development- VS Code (recommended)
+
+
+
+### Available Scripts### 1. Install Dependencies
+
+
+
+```bash```bash
+
+npm run dev              # Start both backend and frontend# Install root dependencies
+
+npm run dev:backend      # Start backend onlynpm install
+
+npm run dev:frontend     # Start frontend only
+
+npm run build            # Build both projects# Install all project dependencies
+
+npm run build:backend    # Build backend onlynpm run install:all
+
+npm run build:frontend   # Build frontend only```
+
+npm run install:all      # Install all dependencies
+
+```### 2. Setup MongoDB
+
+
+
+### Environment Variables**Option A: Local MongoDB**
 
 ```bash
-# Install root dependencies
-npm install
 
-# Install all project dependencies
-npm run install:all
-```
+**Backend** (`backend/.env`):# Install MongoDB (macOS with Homebrew)
 
-### 2. Setup MongoDB
+```envbrew tap mongodb/brew
 
-**Option A: Local MongoDB**
-```bash
-# Install MongoDB (macOS with Homebrew)
-brew tap mongodb/brew
-brew install mongodb-community
+MONGODB_URI=mongodb://...brew install mongodb-community
 
-# Start MongoDB
-brew services start mongodb-community
+TWITCH_CLIENT_ID=your_client_id
+
+TWITCH_EXTENSION_SECRET=your_secret# Start MongoDB
+
+NODE_ENV=developmentbrew services start mongodb-community
+
+PORT=3000```
+
 ```
 
 **Option B: MongoDB Atlas**
-1. Create a free cluster at https://www.mongodb.com/cloud/atlas
-2. Get your connection string
-3. Use it in the `.env` file
 
-### 3. Create Twitch Extension
+**Frontend** (`frontend/.env.production`):1. Create a free cluster at https://www.mongodb.com/cloud/atlas
 
-1. Go to https://dev.twitch.tv/console/extensions
+```env2. Get your connection string
+
+VITE_API_URL=https://your-api-url.com/api3. Use it in the `.env` file
+
+VITE_WS_URL=wss://your-api-url.com/ws
+
+```### 3. Create Twitch Extension
+
+
+
+## 🤝 Contributing1. Go to https://dev.twitch.tv/console/extensions
+
 2. Click "Create Extension"
-3. Fill in the details:
+
+This is a personal project, but suggestions and bug reports are welcome via GitHub Issues.3. Fill in the details:
+
    - **Name**: Twitch Chat Tier List
-   - **Description**: Interactive tier list voting for viewers
+
+## 📝 License   - **Description**: Interactive tier list voting for viewers
+
    - **Extension Type**: Panel, Video Component, Video Overlay, Mobile
-4. After creation, note down:
+
+MIT License - See LICENSE file for details4. After creation, note down:
+
    - **Client ID**
-   - **Extension Secret** (Base64 encoded)
+
+## 🔗 Links   - **Extension Secret** (Base64 encoded)
+
 5. Configure Extension URLs (for local development):
-   - **Config**: `https://localhost:3000/config.html`
-   - **Panel**: `https://localhost:3000/panel.html`
-   - **Video Component**: `https://localhost:3000/video_component.html`
+
+- **Twitch Extension**: [or6ehrdoc9gzasby1hmhhtw4wa0qdm](https://dev.twitch.tv/console/extensions/or6ehrdoc9gzasby1hmhhtw4wa0qdm)   - **Config**: `https://localhost:3000/config.html`
+
+- **Backend API**: https://twitch-chat-tier-production.up.railway.app   - **Panel**: `https://localhost:3000/panel.html`
+
+- **Support**: [Buy me a coffee](https://buymeacoffee.com/matthewforsyth) ☕   - **Video Component**: `https://localhost:3000/video_component.html`
+
    - **Video Overlay**: `https://localhost:3000/video_overlay.html`
-   - **Mobile**: `https://localhost:3000/mobile.html`
 
-### 4. Configure Environment Variables
+## 🙏 Acknowledgments   - **Mobile**: `https://localhost:3000/mobile.html`
 
-```bash
-# Copy the example env file
+
+
+- Built with React, TypeScript, and Vite### 4. Configure Environment Variables
+
+- Powered by Railway and MongoDB
+
+- Styled with Twitch design tokens```bash
+
+- Drag & drop by react-beautiful-dnd# Copy the example env file
+
 cp backend/.env.example backend/.env
 
+---
+
 # Edit backend/.env with your values
-```
+
+**Status**: ✅ Production Ready | **Version**: 0.0.21 | **Last Updated**: October 2025```
+
 
 Required environment variables:
 ```bash

@@ -33,3 +33,10 @@ coverage/
 .cache/
 .temp/
 .tmp/
+
+# Documentation
+docs/archive/
+
+# Deployment packages (keep only latest)
+frontend/twitch-extension-v*.zip
+!frontend/twitch-extension-v0.0.21-fixed.zip
