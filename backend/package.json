@@ -1,6 +1,6 @@
 {
-  "name": "twitch-tier-backend",
-  "version": "0.1.0",
+  "name": "twitch-chat-tier-backend",
+  "version": "0.1.1",
   "description": "Backend service for Twitch tier list extension",
   "main": "dist/server.js",
   "scripts": {

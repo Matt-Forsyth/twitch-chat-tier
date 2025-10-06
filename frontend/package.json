@@ -1,6 +1,6 @@
 {
-  "name": "twitch-tier-frontend",
-  "version": "0.1.0",
+    "name": "twitch-chat-tier-frontend",
+  "version": "0.1.1",
   "description": "Frontend for Twitch tier list extension",
   "type": "module",
   "scripts": {

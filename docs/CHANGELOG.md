@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.1] - 2025-10-06 (Hotfix)
+
+### 🐛 Fixed
+- **Template Clone 404 Error**: Fixed Express route ordering issue that caused `/api/templates/:id/clone` requests to return 404
+  - Moved all specific routes (`/meta/categories`, `/meta/tags`, `/debug/channel/:channelId`, `/:id/clone`, `/:id/vote`, `/:id/myvote`) before the generic `/:id` route
+  - Express was matching the generic `/:id` route first, treating "clone" as a template ID instead of routing to the clone endpoint
+  - Added logging to clone endpoint to help debug future issues
+  - Added comments in code to prevent route ordering issues in the future
+
+### 🔧 Technical
+- Backend: Reorganized templateRoutes.ts route order to prevent route matching conflicts
+- Added explanatory comments about Express route matching behavior
+
+---
+
 ## [0.1.0] - 2025-10-06 (First Alpha Patch)
 
 ### ✨ Added

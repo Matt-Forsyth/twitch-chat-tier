@@ -86,23 +86,70 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// Get template by ID
-router.get('/:id', async (req: Request, res: Response) => {
+// ===================================================================
+// IMPORTANT: Specific routes must come BEFORE generic /:id route
+// to prevent Express from matching "clone", "vote", "meta", etc. as IDs
+// ===================================================================
+
+// Get template categories
+router.get('/meta/categories', async (req: Request, res: Response) => {
   try {
-    const template = await Template.findById(req.params.id).select('-ratings.userId');
-
-    if (!template) {
-      return res.status(404).json({ error: 'Template not found' });
-    }
-
-    if (!template.isPublic) {
-      return res.status(403).json({ error: 'This template is private' });
-    }
-
-    res.json(template);
+    const categories = await Template.distinct('category', { isPublic: true, category: { $ne: null } });
+    res.json({ categories });
   } catch (error: any) {
-    console.error('[Templates] Get template error:', error);
-    res.status(500).json({ error: 'Failed to fetch template' });
+    console.error('[Templates] Get categories error:', error);
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// Get popular tags
+router.get('/meta/tags', async (req: Request, res: Response) => {
+  try {
+    const tags = await Template.aggregate([
+      { $match: { isPublic: true } },
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 50 },
+    ]);
+
+    res.json({ tags: tags.map(t => ({ tag: t._id, count: t.count })) });
+  } catch (error: any) {
+    console.error('[Templates] Get tags error:', error);
+    res.status(500).json({ error: 'Failed to fetch tags' });
+  }
+});
+
+// Debug endpoint - get all templates for a channel (including private)
+router.get('/debug/channel/:channelId', authenticateTwitch, async (req: AuthRequest, res: Response) => {
+  try {
+    const channelId = req.params.channelId;
+    
+    // Only allow broadcasters to see their own templates
+    if (req.twitchAuth?.channel_id !== channelId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const templates = await Template.find({ channelId })
+      .select('_id tierListId title isPublic category tags createdAt')
+      .sort({ createdAt: -1 });
+
+    console.log('[Templates] Debug channel templates:', {
+      channelId,
+      count: templates.length,
+      templates: templates.map(t => ({
+        id: t._id,
+        tierListId: t.tierListId,
+        title: t.title,
+        isPublic: t.isPublic,
+        category: t.category
+      }))
+    });
+
+    res.json({ templates });
+  } catch (error: any) {
+    console.error('[Templates] Debug error:', error);
+    res.status(500).json({ error: 'Failed to fetch debug info' });
   }
 });
 
@@ -292,13 +339,21 @@ router.post('/unpublish/:tierListId', authenticateTwitch, async (req: AuthReques
 // Clone template to create new tier list
 router.post('/:id/clone', authenticateTwitch, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('[Templates] Clone request:', {
+      templateId: req.params.id,
+      channelId: req.twitchAuth?.channel_id,
+      userId: req.twitchAuth?.user_id
+    });
+
     const template = await Template.findById(req.params.id);
 
     if (!template) {
+      console.log('[Templates] Clone failed: template not found');
       return res.status(404).json({ error: 'Template not found' });
     }
 
     if (!template.isPublic) {
+      console.log('[Templates] Clone failed: template is private');
       return res.status(403).json({ error: 'This template is private' });
     }
 
@@ -317,6 +372,10 @@ router.post('/:id/clone', authenticateTwitch, async (req: AuthRequest, res: Resp
     });
 
     await newTierList.save();
+    console.log('[Templates] New tier list created:', {
+      id: newTierList._id,
+      title: newTierList.title
+    });
 
     // Increment usage count
     template.usageCount += 1;
@@ -409,65 +468,27 @@ router.get('/:id/myvote', authenticateTwitch, async (req: AuthRequest, res: Resp
   }
 });
 
-// Get template categories
-router.get('/meta/categories', async (req: Request, res: Response) => {
-  try {
-    const categories = await Template.distinct('category', { isPublic: true, category: { $ne: null } });
-    res.json({ categories });
-  } catch (error: any) {
-    console.error('[Templates] Get categories error:', error);
-    res.status(500).json({ error: 'Failed to fetch categories' });
-  }
-});
+// ===================================================================
+// Generic /:id route MUST come after all specific routes above
+// ===================================================================
 
-// Get popular tags
-router.get('/meta/tags', async (req: Request, res: Response) => {
+// Get template by ID
+router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const tags = await Template.aggregate([
-      { $match: { isPublic: true } },
-      { $unwind: '$tags' },
-      { $group: { _id: '$tags', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 50 },
-    ]);
+    const template = await Template.findById(req.params.id).select('-ratings.userId');
 
-    res.json({ tags: tags.map(t => ({ tag: t._id, count: t.count })) });
-  } catch (error: any) {
-    console.error('[Templates] Get tags error:', error);
-    res.status(500).json({ error: 'Failed to fetch tags' });
-  }
-});
-
-// Debug endpoint - get all templates for a channel (including private)
-router.get('/debug/channel/:channelId', authenticateTwitch, async (req: AuthRequest, res: Response) => {
-  try {
-    const channelId = req.params.channelId;
-    
-    // Only allow broadcasters to see their own templates
-    if (req.twitchAuth?.channel_id !== channelId) {
-      return res.status(403).json({ error: 'Access denied' });
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
     }
 
-    const templates = await Template.find({ channelId })
-      .select('_id tierListId title isPublic category tags createdAt')
-      .sort({ createdAt: -1 });
+    if (!template.isPublic) {
+      return res.status(403).json({ error: 'This template is private' });
+    }
 
-    console.log('[Templates] Debug channel templates:', {
-      channelId,
-      count: templates.length,
-      templates: templates.map(t => ({
-        id: t._id,
-        tierListId: t.tierListId,
-        title: t.title,
-        isPublic: t.isPublic,
-        category: t.category
-      }))
-    });
-
-    res.json({ templates });
+    res.json(template);
   } catch (error: any) {
-    console.error('[Templates] Debug error:', error);
-    res.status(500).json({ error: 'Failed to fetch debug info' });
+    console.error('[Templates] Get template error:', error);
+    res.status(500).json({ error: 'Failed to fetch template' });
   }
 });
 
