@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.24] - 2024-12-XX
+
+### 🎨 Major UI Simplification
+
+#### Removed Features
+- **Viewer Suggestions System**: Completely removed suggestion functionality to simplify codebase
+  - Removed suggestion submission, acceptance, and rejection UI
+  - Removed backend endpoints (will remain but unused)
+  - Removed dedicated "Viewer Suggestions" section from broadcaster panel
+
+#### Changed
+- **Consolidated Tier List Display**: Active tier lists now appear in "All Tier Lists" section
+  - Active tier lists have purple border and animated "🔴 ACTIVE" badge
+  - Removed dedicated "Currently Active" section
+  - Cleaner, more unified interface
+- **Universal Edit Button**: Edit button now available for all tier list statuses
+  - Previously only available for draft and completed tier lists
+  - Streamers can now manage items at any stage
+- **Enhanced Edit Modal**: Added item addition capability directly in edit modal
+  - New "➕ Add New Item" section with highlighted styling
+  - Add items without needing tier list to be active
+  - Input fields for item name (required) and image URL (optional)
+  - All item management in one place: add, edit, delete
+- **Active Tier List Actions**: New action buttons for active tier lists
+  - ✅ Complete - Mark tier list as completed
+  - 🔄 Reset Votes - Clear all votes and start over
+  - 📊 View Results - See current voting results
+  - Available directly on tier list card in main list
+
+#### ✨ Added
+- **Partial Voting**: Viewers can now vote on newly added items
+  - If new items are added after a viewer has voted, they can update their vote
+  - "🆕 New items have been added!" notification banner
+  - "Update Your Vote" button appears when new items exist
+  - Viewers only need to vote on items they haven't rated yet
+  - Previous votes are preserved and merged with new votes
+- **Active Status Indicator**: Visual improvements for active tier lists
+  - Purple border with glow effect (#9147ff)
+  - Animated "🔴 ACTIVE" badge
+  - Prominent status display in main list
+
+### 🐛 Fixed
+- Removed approximately 250 lines of unused suggestion UI code
+- Cleaned up state management (removed unused variables)
+- Improved button layout and organization for all tier list statuses
+- Delete button now properly checks tier list status instead of comparing IDs
+
+---
+
 ## [0.0.23] - 2024-12-XX
 
 ### 🐛 Fixed

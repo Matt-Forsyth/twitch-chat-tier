@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { twitchExt } from './utils/twitch';
 import { apiClient } from './utils/api';
-import { TierListConfig, TierListItem, TierListResults, Suggestion } from './types';
+import { TierListConfig, TierListItem, TierListResults } from './types';
 import TemplateBrowser from './TemplateBrowser';
 import './styles/global.css';
 
@@ -16,7 +16,6 @@ const Config: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [editingItem, setEditingItem] = useState<{ id: string; name: string; imageUrl?: string } | null>(null);
   const [publishModalId, setPublishModalId] = useState<string | null>(null);
   const [publishDescription, setPublishDescription] = useState('');
@@ -25,17 +24,15 @@ const Config: React.FC = () => {
   const [categories] = useState(['Gaming', 'Movies', 'TV Shows', 'Music', 'Food & Drink', 'Sports', 'Other']);
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
   const [editingTierList, setEditingTierList] = useState<TierListConfig | null>(null);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemImage, setNewItemImage] = useState('');
   const [expandedSections, setExpandedSections] = useState({
-    suggestions: true,
-    itemManagement: true,
     allTierLists: true
   });
   
   // Form state
   const [title, setTitle] = useState('');
   const [items, setItems] = useState<TierListItem[]>([]);
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemImage, setNewItemImage] = useState('');
 
   useEffect(() => {
     console.log('[Config] Component mounted');
@@ -60,14 +57,6 @@ const Config: React.FC = () => {
       await loadTierLists();
     });
   }, []);
-
-  // Load suggestions for active tier list
-  useEffect(() => {
-    const activeTierList = tierLists.find(tl => tl.status === 'active');
-    if (activeTierList) {
-      loadSuggestions(activeTierList._id);
-    }
-  }, [tierLists]);
 
   const loadTierLists = async () => {
     try {
@@ -293,42 +282,8 @@ const Config: React.FC = () => {
     }
   };
 
-  const handleAcceptSuggestion = async (suggestion: Suggestion) => {
-    try {
-      await apiClient.addItemToTierList(suggestion.tierListId, suggestion.itemName, suggestion.imageUrl);
-      await apiClient.approveSuggestion(suggestion._id);
-      await loadSuggestions(suggestion.tierListId);
-      await loadTierLists();
-      if (selectedTierList?._id === suggestion.tierListId) {
-        await loadResults(suggestion.tierListId);
-      }
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to accept suggestion');
-    }
-  };
-
-  const handleRejectSuggestion = async (suggestion: Suggestion) => {
-    try {
-      await apiClient.rejectSuggestion(suggestion._id);
-      await loadSuggestions(suggestion.tierListId);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reject suggestion');
-    }
-  };
-
-  const loadSuggestions = async (tierListId: string) => {
-    try {
-      const loadedSuggestions = await apiClient.getSuggestions(tierListId);
-      setSuggestions(loadedSuggestions.filter((s: Suggestion) => s.status === 'pending'));
-    } catch (err: any) {
-      console.error('Failed to load suggestions:', err);
-    }
-  };
-
   // Template/Publishing functions
-  const toggleSection = (section: 'suggestions' | 'itemManagement' | 'allTierLists') => {
+  const toggleSection = (section: 'allTierLists') => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
@@ -516,8 +471,6 @@ const Config: React.FC = () => {
     );
   }
 
-  const activeTierList = tierLists.find(tl => tl.status === 'active');
-
   return (
     <div className="container">
       <div className="card">
@@ -538,210 +491,6 @@ const Config: React.FC = () => {
           </button>
         </div>
 
-        {activeTierList && (
-          <div className="card" style={{ backgroundColor: 'rgba(145, 71, 255, 0.1)', borderColor: 'var(--twitch-purple)' }}>
-            <h3>🔴 Currently Active</h3>
-            <h2>{activeTierList.title}</h2>
-            <p style={{ color: 'var(--twitch-text-alt)' }}>
-              {activeTierList.items.length} items · Started {new Date(activeTierList.startTime!).toLocaleString()}
-            </p>
-            
-            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-              <button className="button button-secondary" onClick={() => handleViewResults(activeTierList)}>
-                View Results
-              </button>
-              <button className="button button-danger" onClick={() => handleComplete(activeTierList._id)}>
-                Complete
-              </button>
-              <button className="button button-secondary" onClick={() => handleReset(activeTierList._id)}>
-                Reset Votes
-              </button>
-            </div>
-
-            {/* Viewer Suggestions */}
-            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--twitch-border)' }}>
-              <div 
-                onClick={() => toggleSection('suggestions')} 
-                style={{ 
-                  cursor: 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  userSelect: 'none'
-                }}
-              >
-                <span style={{ fontSize: '18px' }}>{expandedSections.suggestions ? '▼' : '▶'}</span>
-                <h3 style={{ margin: 0 }}>Viewer Suggestions {suggestions.length > 0 && `(${suggestions.length})`}</h3>
-              </div>
-              {expandedSections.suggestions && (suggestions.length === 0 ? (
-                <p style={{ color: 'var(--twitch-text-alt)', fontSize: '14px' }}>No pending suggestions</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                  {suggestions.map((suggestion) => (
-                    <div key={suggestion._id} style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '10px',
-                      padding: '10px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      borderRadius: '4px'
-                    }}>
-                      {suggestion.imageUrl && (
-                        <img 
-                          src={suggestion.imageUrl} 
-                          alt={suggestion.itemName}
-                          style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
-                        />
-                      )}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 'bold' }}>{suggestion.itemName}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--twitch-text-alt)' }}>
-                          Suggested by {suggestion.username}
-                        </div>
-                      </div>
-                      <button 
-                        className="button"
-                        onClick={() => handleAcceptSuggestion(suggestion)}
-                        style={{ padding: '5px 15px' }}
-                      >
-                        Accept
-                      </button>
-                      <button 
-                        className="button button-danger"
-                        onClick={() => handleRejectSuggestion(suggestion)}
-                        style={{ padding: '5px 15px' }}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            {/* Item Management */}
-            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--twitch-border)' }}>
-              <div 
-                onClick={() => toggleSection('itemManagement')} 
-                style={{ 
-                  cursor: 'pointer', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  userSelect: 'none'
-                }}
-              >
-                <span style={{ fontSize: '18px' }}>{expandedSections.itemManagement ? '▼' : '▶'}</span>
-                <h3 style={{ margin: 0 }}>Manage Items ({activeTierList.items.length})</h3>
-              </div>
-              {expandedSections.itemManagement && (
-              <>
-              {/* Add Item Form */}
-              <div style={{ marginTop: '10px', marginBottom: '15px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '10px' }}>
-                  <input 
-                    type="text" 
-                    className="input" 
-                    value={newItemName} 
-                    onChange={(e) => setNewItemName(e.target.value)}
-                    placeholder="Item name"
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddItemToTierList(activeTierList._id)}
-                  />
-                  <input 
-                    type="text" 
-                    className="input" 
-                    value={newItemImage} 
-                    onChange={(e) => setNewItemImage(e.target.value)}
-                    placeholder="Image URL (optional)"
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddItemToTierList(activeTierList._id)}
-                  />
-                  <button 
-                    className="button" 
-                    onClick={() => handleAddItemToTierList(activeTierList._id)}
-                  >
-                    Add Item
-                  </button>
-                </div>
-              </div>
-
-              {/* Item List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                {activeTierList.items.map((item) => (
-                  <div key={item.id} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '10px',
-                    padding: '8px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '4px'
-                  }}>
-                    {editingItem?.id === item.id ? (
-                      <>
-                        <input 
-                          type="text" 
-                          className="input" 
-                          value={editingItem.name} 
-                          onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                          style={{ flex: 1, padding: '5px' }}
-                        />
-                        <input 
-                          type="text" 
-                          className="input" 
-                          value={editingItem.imageUrl || ''} 
-                          onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                          placeholder="Image URL"
-                          style={{ flex: 2, padding: '5px' }}
-                        />
-                        <button 
-                          className="button"
-                          onClick={() => handleSaveEditedItem(activeTierList._id)}
-                          style={{ padding: '5px 15px' }}
-                        >
-                          Save
-                        </button>
-                        <button 
-                          className="button button-secondary"
-                          onClick={() => setEditingItem(null)}
-                          style={{ padding: '5px 15px' }}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        {item.imageUrl && (
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.name}
-                            style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }}
-                          />
-                        )}
-                        <span style={{ flex: 1 }}>{item.name}</span>
-                        <button 
-                          className="button button-secondary"
-                          onClick={() => handleEditItem(item)}
-                          style={{ padding: '5px 15px' }}
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          className="button button-danger"
-                          onClick={() => handleDeleteItem(activeTierList._id, item.id)}
-                          style={{ padding: '5px 15px' }}
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-              </>
-              )}
-            </div>
-          </div>
-        )}
-
         <div 
           onClick={() => toggleSection('allTierLists')} 
           style={{ 
@@ -759,11 +508,31 @@ const Config: React.FC = () => {
         {expandedSections.allTierLists && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {tierLists.map((tierList) => (
-            <div key={tierList._id} className="card">
+            <div 
+              key={tierList._id} 
+              className="card"
+              style={{
+                border: tierList.status === 'active' ? '2px solid #9147ff' : undefined,
+                boxShadow: tierList.status === 'active' ? '0 0 10px rgba(145, 71, 255, 0.5)' : undefined,
+              }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <h3 style={{ margin: 0 }}>{tierList.title}</h3>
+                    {tierList.status === 'active' && (
+                      <span style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        backgroundColor: '#9147ff',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        animation: 'pulse 2s infinite',
+                      }}>
+                        🔴 ACTIVE
+                      </span>
+                    )}
                     {tierList.isPublic && (
                       <span style={{
                         fontSize: '11px',
@@ -779,7 +548,7 @@ const Config: React.FC = () => {
                   </div>
                   <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0' }}>
                     Status: <span style={{ 
-                      color: tierList.status === 'active' ? '#00e5ff' : tierList.status === 'completed' ? '#7fff7f' : '#808080',
+                      color: tierList.status === 'active' ? '#9147ff' : tierList.status === 'completed' ? '#7fff7f' : '#808080',
                       fontWeight: 'bold'
                     }}>
                       {tierList.status.toUpperCase()}
@@ -820,29 +589,41 @@ const Config: React.FC = () => {
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {tierList.status === 'draft' && (
+                  {/* Active tier list actions */}
+                  {tierList.status === 'active' && (
                     <>
-                      <button className="button" onClick={() => handleActivate(tierList._id)}>
-                        Activate
+                      <button className="button" onClick={() => handleComplete(tierList._id)}>
+                        ✅ Complete
                       </button>
-                      <button className="button button-secondary" onClick={() => setEditingTierList(tierList)}>
-                        ✏️ Edit Items
+                      <button className="button button-secondary" onClick={() => handleReset(tierList._id)}>
+                        🔄 Reset Votes
+                      </button>
+                      <button className="button button-secondary" onClick={() => handleViewResults(tierList)}>
+                        📊 View Results
                       </button>
                     </>
                   )}
+                  
+                  {/* Draft tier list actions */}
+                  {tierList.status === 'draft' && (
+                    <button className="button" onClick={() => handleActivate(tierList._id)}>
+                      Activate
+                    </button>
+                  )}
+                  
+                  {/* Completed tier list actions */}
                   {tierList.status === 'completed' && (
                     <>
                       <button className="button button-secondary" onClick={() => handleViewResults(tierList)}>
-                        View Results
+                        📊 View Results
                       </button>
                       <button className="button" onClick={() => handleActivate(tierList._id)}>
                         Reactivate
                       </button>
-                      <button className="button button-secondary" onClick={() => setEditingTierList(tierList)}>
-                        ✏️ Edit Items
-                      </button>
                     </>
                   )}
+                  
+                  {/* Publish/Unpublish - only for completed tier lists */}
                   {tierList.status === 'completed' && !tierList.isPublic && (
                     <button className="button" onClick={() => handleOpenPublishModal(tierList._id)}>
                       📤 Publish
@@ -853,14 +634,21 @@ const Config: React.FC = () => {
                       🔒 Unpublish
                     </button>
                   )}
+                  
+                  {/* Edit button - available for all statuses */}
+                  <button className="button button-secondary" onClick={() => setEditingTierList(tierList)}>
+                    ✏️ Edit Items
+                  </button>
+                  
+                  {/* Delete button - disabled for active tier lists */}
                   <button 
                     className="button button-danger" 
                     onClick={() => handleDelete(tierList._id)}
-                    disabled={tierList._id === activeTierList?._id}
-                    title={tierList._id === activeTierList?._id ? 'Cannot delete active tier list' : 'Delete this tier list'}
+                    disabled={tierList.status === 'active'}
+                    title={tierList.status === 'active' ? 'Cannot delete active tier list' : 'Delete this tier list'}
                     style={{ 
-                      opacity: tierList._id === activeTierList?._id ? 0.5 : 1,
-                      cursor: tierList._id === activeTierList?._id ? 'not-allowed' : 'pointer'
+                      opacity: tierList.status === 'active' ? 0.5 : 1,
+                      cursor: tierList.status === 'active' ? 'not-allowed' : 'pointer'
                     }}
                   >
                     Delete
@@ -1152,13 +940,55 @@ const Config: React.FC = () => {
               overflow: 'auto',
               padding: '20px',
             }}>
+              {/* Add New Item Section */}
+              <div style={{
+                marginBottom: '30px',
+                padding: '15px',
+                backgroundColor: 'rgba(145, 71, 255, 0.1)',
+                border: '1px solid rgba(145, 71, 255, 0.3)',
+                borderRadius: '8px',
+              }}>
+                <h3 style={{ marginTop: 0, marginBottom: '15px' }}>➕ Add New Item</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <input
+                    type="text"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    placeholder="Item name (required)"
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                  <input
+                    type="text"
+                    value={newItemImage}
+                    onChange={(e) => setNewItemImage(e.target.value)}
+                    placeholder="Image URL (optional)"
+                    className="input"
+                    style={{ width: '100%' }}
+                  />
+                  <button 
+                    className="button"
+                    onClick={() => handleAddItemToTierList(editingTierList._id)}
+                    disabled={!newItemName.trim()}
+                    style={{
+                      opacity: !newItemName.trim() ? 0.5 : 1,
+                      cursor: !newItemName.trim() ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Add Item
+                  </button>
+                </div>
+              </div>
+
+              {/* Existing Items List */}
+              <h3 style={{ marginBottom: '10px' }}>Existing Items ({editingTierList.items.length})</h3>
               <p style={{ color: 'var(--twitch-text-alt)', marginBottom: '20px' }}>
                 {editingTierList.items.length} items in this tier list
               </p>
 
               {editingTierList.items.length === 0 ? (
                 <p style={{ textAlign: 'center', color: 'var(--twitch-text-alt)', padding: '40px' }}>
-                  No items yet. Items can be added when this tier list is active.
+                  No items yet. Add your first item above!
                 </p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

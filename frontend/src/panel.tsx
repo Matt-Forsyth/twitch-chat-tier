@@ -68,7 +68,7 @@ const Panel: React.FC = () => {
   };
 
   const handleDragEnd = (result: DropResult) => {
-    if (hasVoted) return;
+    // Allow dragging unvoted items even if user has already voted
     if (!result.destination) return;
     
     const itemId = result.draggableId;
@@ -155,21 +155,36 @@ const Panel: React.FC = () => {
 
   const allItemsVoted = tierList.items.length === userVotes.size;
   const unvotedItems = tierList.items.filter(item => !userVotes.has(item.id));
+  const hasNewItems = hasVoted && unvotedItems.length > 0;
 
   return (
     <div className="container">
       <div className="card">
         <h1>{tierList.title}</h1>
         {error && <div className="error">{error}</div>}
-        {hasVoted && <div className="success">Your vote has been submitted!</div>}
+        {hasVoted && !hasNewItems && <div className="success">Your vote has been submitted!</div>}
+        {hasNewItems && (
+          <div style={{
+            backgroundColor: 'rgba(145, 71, 255, 0.2)',
+            border: '1px solid #9147ff',
+            borderRadius: '4px',
+            padding: '10px',
+            marginBottom: '15px',
+            color: 'var(--twitch-text)',
+          }}>
+            🆕 New items have been added! You can vote on them below.
+          </div>
+        )}
         
         <p style={{ color: 'var(--twitch-text-alt)', marginBottom: '20px' }}>
-          {hasVoted 
+          {hasVoted && !hasNewItems
             ? 'You have already voted. Thank you for participating!' 
+            : hasNewItems
+            ? `${unvotedItems.length} new item${unvotedItems.length > 1 ? 's' : ''} to rate! Drag them to tiers to update your vote.`
             : 'Drag items to tiers or use dropdowns to assign ratings, then submit your vote.'}
         </p>
 
-        {!hasVoted && (
+        {(!hasVoted || hasNewItems) && (
           <DragDropContext onDragEnd={handleDragEnd}>
             {/* Tier containers */}
             <div style={{ marginBottom: '20px' }}>
@@ -375,19 +390,24 @@ const Panel: React.FC = () => {
           </>
         )}
 
-        {!hasVoted && (
+        {(!hasVoted || hasNewItems) && (
           <>
             <button 
               className="button" 
               onClick={handleSubmit} 
-              disabled={!allItemsVoted || submitting}
+              disabled={(!allItemsVoted && !hasNewItems) || submitting}
               style={{ width: '100%', marginBottom: '10px' }}
             >
-              {submitting ? 'Submitting...' : 'Submit Your Vote'}
+              {submitting ? 'Submitting...' : hasNewItems ? 'Update Your Vote' : 'Submit Your Vote'}
             </button>
-            {!allItemsVoted && (
+            {!allItemsVoted && !hasNewItems && (
               <p style={{ color: 'var(--twitch-text-alt)', textAlign: 'center' }}>
                 Please vote for all {tierList.items.length} items before submitting ({unvotedItems.length} remaining)
+              </p>
+            )}
+            {hasNewItems && unvotedItems.length > 0 && (
+              <p style={{ color: 'var(--twitch-text-alt)', textAlign: 'center' }}>
+                {unvotedItems.length} new item{unvotedItems.length > 1 ? 's' : ''} to rate
               </p>
             )}
           </>
