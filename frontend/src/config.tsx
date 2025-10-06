@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { twitchExt } from './utils/twitch';
 import { apiClient } from './utils/api';
-import { TierListConfig, TierListItem, TierListResults, Suggestion, Analytics, AnalyticsSummary } from './types';
+import { TierListConfig, TierListItem, TierListResults } from './types';
 import './styles/global.css';
 
 const Config: React.FC = () => {
@@ -15,10 +15,6 @@ const Config: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'tierlists' | 'analytics'>('tierlists');
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [analytics, setAnalytics] = useState<Analytics[]>([]);
-  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummary | null>(null);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -76,52 +72,7 @@ const Config: React.FC = () => {
     }
   };
 
-  const loadSuggestions = async (tierListId: string) => {
-    try {
-      const data = await apiClient.getSuggestions(tierListId, 'pending');
-      setSuggestions(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load suggestions');
-    }
-  };
 
-  const loadAnalytics = async () => {
-    try {
-      const [analyticsData, summaryData] = await Promise.all([
-        apiClient.getChannelAnalytics(),
-        apiClient.getChannelSummary()
-      ]);
-      setAnalytics(analyticsData);
-      setAnalyticsSummary(summaryData);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load analytics');
-    }
-  };
-
-  const handleApproveSuggestion = async (suggestionId: string) => {
-    try {
-      await apiClient.approveSuggestion(suggestionId);
-      if (selectedTierList) {
-        await loadSuggestions(selectedTierList._id);
-        await loadTierLists(); // Refresh to show updated items
-      }
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to approve suggestion');
-    }
-  };
-
-  const handleRejectSuggestion = async (suggestionId: string) => {
-    try {
-      await apiClient.rejectSuggestion(suggestionId);
-      if (selectedTierList) {
-        await loadSuggestions(selectedTierList._id);
-      }
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reject suggestion');
-    }
-  };
 
   const handleAddItem = () => {
     if (!newItemName.trim()) return;
