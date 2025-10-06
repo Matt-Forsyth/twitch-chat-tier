@@ -1,0 +1,163 @@
+// Analytics Dashboard Component for config.tsx
+// Copy this code into your config.tsx file within the {activeTab === 'analytics' && ( ... )} section
+
+{activeTab === 'analytics' && (
+  <div>
+    {/* Channel Statistics Summary */}
+    {analyticsSummary && (
+      <div className="card" style={{ backgroundColor: 'rgba(145, 71, 255, 0.05)' }}>
+        <h2>📊 Channel Statistics</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginTop: '20px' }}>
+          <div>
+            <p style={{ color: 'var(--twitch-text-alt)', margin: 0, fontSize: '12px' }}>Total Tier Lists</p>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', margin: '5px 0', color: 'var(--twitch-purple)' }}>
+              {analyticsSummary.totalTierLists}
+            </p>
+          </div>
+          <div>
+            <p style={{ color: 'var(--twitch-text-alt)', margin: 0, fontSize: '12px' }}>Total Votes</p>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', margin: '5px 0', color: 'var(--twitch-purple)' }}>
+              {analyticsSummary.totalVotes}
+            </p>
+          </div>
+          <div>
+            <p style={{ color: 'var(--twitch-text-alt)', margin: 0, fontSize: '12px' }}>Total Voters</p>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', margin: '5px 0', color: 'var(--twitch-purple)' }}>
+              {analyticsSummary.totalVoters}
+            </p>
+          </div>
+          <div>
+            <p style={{ color: 'var(--twitch-text-alt)', margin: 0, fontSize: '12px' }}>Avg Voters/List</p>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', margin: '5px 0', color: 'var(--twitch-purple)' }}>
+              {analyticsSummary.averageVotersPerList.toFixed(1)}
+            </p>
+          </div>
+        </div>
+
+        {/* Most Popular Tier */}
+        {analyticsSummary.mostPopularTier && (
+          <div style={{ marginTop: '20px' }}>
+            <h3>Most Popular Tier</h3>
+            <div style={{ 
+              display: 'inline-block',
+              padding: '10px 20px',
+              backgroundColor: getTierColor(analyticsSummary.mostPopularTier),
+              color: '#000',
+              fontWeight: 'bold',
+              fontSize: '24px',
+              borderRadius: '4px'
+            }}>
+              {analyticsSummary.mostPopularTier}
+            </div>
+          </div>
+        )}
+
+        {/* Tier Distribution Chart */}
+        <div style={{ marginTop: '20px' }}>
+          <h3>Tier Distribution</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {Object.entries(analyticsSummary.tierDistribution)
+              .sort((a, b) => b[1] - a[1])
+              .map(([tier, percentage]) => (
+                <div key={tier} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ 
+                    width: '40px',
+                    padding: '5px',
+                    backgroundColor: getTierColor(tier),
+                    color: '#000',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    borderRadius: '4px'
+                  }}>
+                    {tier}
+                  </div>
+                  <div style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.3)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div 
+                      style={{ 
+                        width: `${percentage}%`,
+                        backgroundColor: getTierColor(tier),
+                        padding: '8px',
+                        textAlign: 'right',
+                        color: '#000',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        minWidth: '30px'
+                      }}
+                    >
+                      {percentage.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Historical Tier Lists */}
+    <h2>Historical Tier Lists</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      {analytics.map((analytic) => (
+        <div key={analytic._id} className="card">
+          <h3>{analytic.title}</h3>
+          <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0' }}>
+            Completed: {new Date(analytic.completedAt).toLocaleString()}
+          </p>
+          <div style={{ display: 'flex', gap: '20px', marginTop: '10px', flexWrap: 'wrap' }}>
+            <div>
+              <span style={{ color: 'var(--twitch-text-alt)', fontSize: '12px' }}>Items:</span>
+              <span style={{ fontWeight: 'bold', marginLeft: '5px' }}>{analytic.itemCount}</span>
+            </div>
+            <div>
+              <span style={{ color: 'var(--twitch-text-alt)', fontSize: '12px' }}>Voters:</span>
+              <span style={{ fontWeight: 'bold', marginLeft: '5px' }}>{analytic.totalVoters}</span>
+            </div>
+            <div>
+              <span style={{ color: 'var(--twitch-text-alt)', fontSize: '12px' }}>Total Votes:</span>
+              <span style={{ fontWeight: 'bold', marginLeft: '5px' }}>{analytic.totalVotes}</span>
+            </div>
+          </div>
+
+          {/* Top Items */}
+          {analytic.topItems.length > 0 && (
+            <div style={{ marginTop: '15px' }}>
+              <h4 style={{ fontSize: '14px', marginBottom: '10px' }}>Top Items:</h4>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {analytic.topItems.slice(0, 5).map((item, idx) => (
+                  <div key={idx} style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <div style={{ 
+                      backgroundColor: getTierColor(item.averageTier),
+                      color: '#000',
+                      fontWeight: 'bold',
+                      padding: '2px 8px',
+                      borderRadius: '3px'
+                    }}>
+                      {item.averageTier}
+                    </div>
+                    <span>{item.itemName}</span>
+                    <span style={{ color: 'var(--twitch-text-alt)' }}>({item.voteCount})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+
+    {/* Empty State */}
+    {analytics.length === 0 && (
+      <p style={{ textAlign: 'center', color: 'var(--twitch-text-alt)', padding: '40px' }}>
+        No completed tier lists yet. Complete a tier list to see analytics!
+      </p>
+    )}
+  </div>
+)}
