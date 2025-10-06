@@ -2,6 +2,26 @@
 
 All notable changes to the Twitch Chat Tier List Extension will be documented in this file.
 
+## [0.0.20] - 2024-10-05
+
+### Added
+- **📊 Vote/Results Toggle**: Viewers can now switch between their own vote and current results
+  - After voting, viewers see two buttons: "📝 My Vote" and "📊 Current Results"
+  - My Vote view shows the user's own tier assignments
+  - Current Results view shows aggregated voting results from all voters
+  - Results include vote counts for each item
+  - Results load on-demand for better performance
+  - Clean toggle UI with visual active state
+
+### Changed
+- Improved post-vote experience for viewers
+- Results automatically loaded after vote submission
+- Better engagement by letting voters see community consensus
+
+### Fixed
+- Cleaned up unused analytics code in config.tsx (prep for future implementation)
+- Removed unused drag-and-drop fallback handler
+
 ## [0.0.19] - 2024-10-05
 
 ### Added
