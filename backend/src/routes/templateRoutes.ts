@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticateTwitch, AuthRequest } from '../middleware/auth';
 import Template from '../models/Template';
 import TierListConfig from '../models/TierListConfig';
+import mongoose from 'mongoose';
 
 const router = Router();
 
@@ -339,18 +340,32 @@ router.post('/unpublish/:tierListId', authenticateTwitch, async (req: AuthReques
 // Clone template to create new tier list
 router.post('/:id/clone', authenticateTwitch, async (req: AuthRequest, res: Response) => {
   try {
+    const templateId = req.params.id;
+    
     console.log('[Templates] Clone request:', {
-      templateId: req.params.id,
+      templateId,
       channelId: req.twitchAuth?.channel_id,
       userId: req.twitchAuth?.user_id
     });
 
-    const template = await Template.findById(req.params.id);
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(templateId)) {
+      console.log('[Templates] Clone failed: invalid template ID format');
+      return res.status(400).json({ error: 'Invalid template ID' });
+    }
+
+    const template = await Template.findById(templateId);
 
     if (!template) {
       console.log('[Templates] Clone failed: template not found');
       return res.status(404).json({ error: 'Template not found' });
     }
+
+    console.log('[Templates] Template found:', {
+      id: template._id,
+      title: template.title,
+      isPublic: template.isPublic
+    });
 
     if (!template.isPublic) {
       console.log('[Templates] Clone failed: template is private');
@@ -380,10 +395,13 @@ router.post('/:id/clone', authenticateTwitch, async (req: AuthRequest, res: Resp
     // Increment usage count
     template.usageCount += 1;
     await template.save();
+    console.log('[Templates] Usage count incremented');
 
+    console.log('[Templates] Clone successful, sending response');
     res.json({ message: 'Template cloned successfully', tierList: newTierList });
   } catch (error: any) {
     console.error('[Templates] Clone error:', error);
+    console.error('[Templates] Error stack:', error.stack);
     res.status(500).json({ error: 'Failed to clone template' });
   }
 });

@@ -79,11 +79,24 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
 
   const handleClone = async (template: Template) => {
     try {
+      console.log('[TemplateBrowser] Starting clone for template:', {
+        id: template._id,
+        title: template.title
+      });
+      
       setCloning(template._id);
       const result = await apiClient.cloneTemplate(template._id);
+      
+      console.log('[TemplateBrowser] Clone API response:', {
+        message: result.message,
+        tierListId: result.tierList._id,
+        tierListTitle: result.tierList.title
+      });
+      
       setError(null);
       
       if (onClone) {
+        console.log('[TemplateBrowser] Calling onClone callback with tierListId:', result.tierList._id);
         // Await the onClone callback since it's async
         await onClone(result.tierList._id);
       }
@@ -92,6 +105,8 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
       if (!onClone) {
         alert(`Template "${template.title}" cloned successfully! Check your tier lists.`);
       }
+      
+      console.log('[TemplateBrowser] Clone complete');
     } catch (err: any) {
       console.error('[TemplateBrowser] Clone error:', err);
       setError(err.message || 'Failed to clone template');

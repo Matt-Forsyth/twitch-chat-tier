@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.3] - 2025-10-06 (Hotfix)
+
+### 🐛 Fixed
+- **Enhanced Template Clone Debugging**: Added comprehensive logging to diagnose "Template not found" errors during cloning
+  - Backend: Added MongoDB ObjectId validation before querying
+  - Backend: Added detailed logging at each step of clone process (template found, tier list created, usage count incremented)
+  - Backend: Added error stack traces for better debugging
+  - Frontend: Added detailed logging in TemplateBrowser handleClone function
+  - Frontend: Logs show template ID, title, API response, and callback execution
+
+### 🔧 Technical
+- Backend: Import mongoose to validate ObjectId format
+- Backend: Return 400 Bad Request for invalid template IDs
+- Frontend: Enhanced console.log statements throughout clone flow
+- Both: Complete logging from button click → API call → database → response → UI update
+
+---
+
 ## [0.1.2] - 2025-10-06 (Hotfix)
 
 ### 🐛 Fixed
