@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0] - 2025-10-06 (First Alpha Patch)
+
+### ✨ Added
+- **👍👎 Thumbs Up/Down Voting System**: Replaced 1-5 star rating with simpler thumbs up/down voting
+  - Vote score calculated as `upvotes - downvotes`
+  - Your votes are highlighted (purple for up, red for down)
+  - Real-time vote counts displayed on template cards
+  - New API endpoints: `POST /api/templates/:id/vote` and `GET /api/templates/:id/myvote`
+
+- **👁️ Template Preview Modal**: New preview feature for templates
+  - Click "👁️ Preview" button to see full template details
+  - Shows template title, description, creator, all tiers, and all items
+  - Grid view of all items with images
+  - Clone directly from preview modal
+  - Easy close button to return to browsing
+
+### 🔄 Changed
+- **Sort Options**: "Top Rated" is now "Most Popular" (sorts by vote score)
+- **Template Cards UI**: Dual buttons (Preview and Clone) side by side
+- **Database Schema**: Template model updated with votes array instead of ratings
+  - Added: `votes`, `upvotes`, `downvotes`, `voteScore` fields
+  - Removed: `ratings`, `averageRating`, `totalRatings` fields
+
+### 🗑️ Removed
+- Star rating system (1-5 stars)
+- API endpoints: `POST /api/templates/:id/rate` and `GET /api/templates/:id/myrating`
+- `renderStars()` function from TemplateBrowser component
+
+### 🔧 Technical
+- Frontend: Updated Template interface and API client methods
+- Backend: New vote endpoints and vote score calculation logic
+- TemplateBrowser: Added `previewTemplate`, `voting`, and `userVotes` states
+
+### 📦 Deployment
+- Frontend: `twitch-chat-tier-v0.1.0.zip` (109KB)
+- Backend: Auto-deployed via Railway
+- Updated all package.json versions to 0.1.0
+
+### 📝 Documentation
+- Completely rewritten README.md to be concise and user-focused
+- Explains features for both streamers and viewers
+- Short, clear paragraphs focused on what the extension does
+
+---
+
 ## [0.0.27] - 2024-12-XX
 
 ### 🐛 Debugging & Diagnostics

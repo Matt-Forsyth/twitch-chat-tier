@@ -35,9 +35,12 @@ coverage/
 .temp/
 .tmp/
 
-# Documentation
+# Documentation (keep only CHANGELOG public)
 docs/
 !docs/CHANGELOG.md
 
-# Deployment packages
+# Deployment packages (keep local only)
 deployments/
+
+# macOS
+.DS_Store
