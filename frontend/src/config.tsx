@@ -367,11 +367,16 @@ const Config: React.FC = () => {
     }
 
     try {
+      console.log('Unpublishing tier list:', tierListId);
       await apiClient.unpublishTierList(tierListId);
       await loadTierLists();
+      alert('Template unpublished successfully!');
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to unpublish template');
+      console.error('Unpublish error:', err);
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to unpublish template';
+      alert(`Failed to unpublish: ${errorMsg}`);
+      setError(errorMsg);
     }
   };
 

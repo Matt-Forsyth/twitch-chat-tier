@@ -162,7 +162,14 @@ router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest,
 // Unpublish template (broadcaster only)
 router.post('/unpublish/:tierListId', authenticateTwitch, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('[Templates] Unpublish request:', {
+      tierListId: req.params.tierListId,
+      role: req.twitchAuth?.role,
+      channelId: req.twitchAuth?.channel_id
+    });
+
     if (req.twitchAuth?.role !== 'broadcaster') {
+      console.log('[Templates] Unpublish denied: not broadcaster');
       return res.status(403).json({ error: 'Only broadcasters can unpublish templates' });
     }
 
@@ -172,12 +179,20 @@ router.post('/unpublish/:tierListId', authenticateTwitch, async (req: AuthReques
     // Get the tier list
     const tierList = await TierListConfig.findById(tierListId);
     if (!tierList) {
+      console.log('[Templates] Tier list not found:', tierListId);
       return res.status(404).json({ error: 'Tier list not found' });
     }
 
     if (tierList.channelId !== channelId) {
+      console.log('[Templates] Channel ID mismatch:', { tierListChannel: tierList.channelId, userChannel: channelId });
       return res.status(403).json({ error: 'Not your tier list' });
     }
+
+    console.log('[Templates] Current tier list state:', {
+      id: tierList._id,
+      isPublic: tierList.isPublic,
+      title: tierList.title
+    });
 
     // Mark tier list as private
     tierList.isPublic = false;
@@ -186,10 +201,14 @@ router.post('/unpublish/:tierListId', authenticateTwitch, async (req: AuthReques
     // Update template to private
     const template = await Template.findOne({ tierListId });
     if (template) {
+      console.log('[Templates] Updating template:', template._id);
       template.isPublic = false;
       await template.save();
+    } else {
+      console.log('[Templates] No template found for tier list:', tierListId);
     }
 
+    console.log('[Templates] Unpublish successful');
     res.json({ message: 'Template unpublished successfully' });
   } catch (error: any) {
     console.error('[Templates] Unpublish error:', error);
