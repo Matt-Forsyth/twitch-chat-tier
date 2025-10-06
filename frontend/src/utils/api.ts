@@ -166,7 +166,18 @@ class ApiClient {
     limit?: number;
     skip?: number;
   }) {
-    const queryString = new URLSearchParams(params as any).toString();
+    // Filter out undefined values before creating query string
+    const filteredParams: any = {};
+    if (params) {
+      Object.keys(params).forEach(key => {
+        const value = (params as any)[key];
+        if (value !== undefined && value !== null && value !== '') {
+          filteredParams[key] = value;
+        }
+      });
+    }
+    
+    const queryString = new URLSearchParams(filteredParams).toString();
     const response = await this.client.get(`/templates${queryString ? '?' + queryString : ''}`);
     return response.data;
   }

@@ -21,20 +21,25 @@ router.get('/', async (req: Request, res: Response) => {
 
     const query: any = { isPublic: true };
 
-    if (category) {
-      query.category = category;
+    // Filter out 'undefined' string and empty values
+    const cleanCategory = category && category !== 'undefined' ? category : null;
+    const cleanTags = tags && tags !== 'undefined' ? tags : null;
+    const cleanSearch = search && search !== 'undefined' ? search : null;
+
+    if (cleanCategory) {
+      query.category = cleanCategory;
     }
 
-    if (tags) {
-      const tagArray = typeof tags === 'string' ? tags.split(',') : tags;
+    if (cleanTags) {
+      const tagArray = typeof cleanTags === 'string' ? cleanTags.split(',') : cleanTags;
       query.tags = { $in: tagArray };
     }
 
-    if (search) {
+    if (cleanSearch) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { channelName: { $regex: search, $options: 'i' } },
+        { title: { $regex: cleanSearch, $options: 'i' } },
+        { description: { $regex: cleanSearch, $options: 'i' } },
+        { channelName: { $regex: cleanSearch, $options: 'i' } },
       ];
     }
 
