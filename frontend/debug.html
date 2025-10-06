@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extension Debug Test</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+</head>
+<body>
+    <h1>Twitch Extension Debug Test</h1>
+    <div id="status">Loading...</div>
+    <div id="logs" style="background: #000; color: #0f0; padding: 20px; font-family: monospace; white-space: pre-wrap;"></div>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        
+        function log(msg) {
+            console.log(msg);
+            logs.textContent += msg + '\n';
+        }
+        
+        log('[Debug] Page loaded');
+        log('[Debug] window.Twitch: ' + (window.Twitch ? 'EXISTS' : 'MISSING'));
+        
+        if (window.Twitch && window.Twitch.ext) {
+            log('[Debug] Twitch.ext exists');
+            
+            window.Twitch.ext.onAuthorized((auth) => {
+                log('[Debug] Auth received!');
+                log('[Debug] Role: ' + auth.role);
+                log('[Debug] Channel ID: ' + auth.channelId);
+                log('[Debug] User ID: ' + auth.userId);
+                log('[Debug] Token: ' + (auth.token ? 'EXISTS (length: ' + auth.token.length + ')' : 'MISSING'));
+                
+                status.textContent = 'Authorized as ' + auth.role;
+                
+                // Test API connection
+                const apiUrl = 'https://twitch-chat-tier-production.up.railway.app/api';
+                log('[Debug] Testing API: ' + apiUrl);
+                
+                fetch(apiUrl + '/auth/verify', {
+                    headers: {
+                        'Authorization': 'Bearer ' + auth.token
+                    }
+                })
+                .then(r => {
+                    log('[Debug] API Response status: ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    log('[Debug] API Response: ' + JSON.stringify(data));
+                    status.textContent = 'API Connected!';
+                })
+                .catch(err => {
+                    log('[Debug] API Error: ' + err.message);
+                    status.textContent = 'API Error: ' + err.message;
+                });
+            });
+            
+            log('[Debug] Waiting for authorization...');
+        } else {
+            log('[Debug] ERROR: Twitch.ext not found!');
+            status.textContent = 'ERROR: Twitch Extension Helper not loaded';
+        }
+    </script>
+</body>
+</html>

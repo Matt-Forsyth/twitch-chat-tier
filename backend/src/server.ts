@@ -29,8 +29,34 @@ app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet());
+
+// CORS configuration for Twitch Extensions
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'https://localhost.rig.twitch.tv:3000',
+  'https://localhost.rig.twitch.tv:3001',
+  'https://localhost.rig.twitch.tv:8080',
+];
+
+// For Twitch Extension, we need to allow all Twitch domains
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    
+    // Allow Twitch Extension domains
+    if (origin.includes('.twitch.tv') || origin.includes('.ext-twitch.tv')) {
+      return callback(null, true);
+    }
+    
+    // Allow configured origins
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      return callback(null, true);
+    }
+    
+    // Deny others
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
