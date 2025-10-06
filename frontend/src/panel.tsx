@@ -93,6 +93,9 @@ const Panel: React.FC = () => {
       setHasVoted(true);
       setError(null);
       
+      // Reload the active tier list to get fresh data
+      await loadActiveTierList();
+      
       // Load results after voting
       await loadResults();
       
@@ -287,7 +290,7 @@ const Panel: React.FC = () => {
         )}
 
         {/* Voted items display (after submission) */}
-        {hasVoted && (
+        {hasVoted && !hasNewItems && (
           <>
             {/* Toggle View Button */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', justifyContent: 'center' }}>

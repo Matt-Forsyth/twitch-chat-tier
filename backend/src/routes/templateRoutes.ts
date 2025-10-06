@@ -17,6 +17,8 @@ router.get('/', async (req: Request, res: Response) => {
       skip = 0 
     } = req.query;
 
+    console.log('[Templates] Fetch request:', { category, tags, search, sort, limit, skip });
+
     const query: any = { isPublic: true };
 
     if (category) {
@@ -59,6 +61,14 @@ router.get('/', async (req: Request, res: Response) => {
 
     const total = await Template.countDocuments(query);
 
+    console.log('[Templates] Fetch results:', {
+      query,
+      sortQuery,
+      foundCount: templates.length,
+      total,
+      hasMore: Number(skip) + templates.length < total
+    });
+
     res.json({
       templates,
       total,
@@ -93,7 +103,15 @@ router.get('/:id', async (req: Request, res: Response) => {
 // Publish tier list as template (broadcaster only)
 router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest, res: Response) => {
   try {
+    console.log('[Templates] Publish request:', {
+      tierListId: req.params.tierListId,
+      role: req.twitchAuth?.role,
+      channelId: req.twitchAuth?.channel_id,
+      body: req.body
+    });
+
     if (req.twitchAuth?.role !== 'broadcaster') {
+      console.log('[Templates] Publish denied: not broadcaster');
       return res.status(403).json({ error: 'Only broadcasters can publish templates' });
     }
 
@@ -122,8 +140,21 @@ router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest,
     if (tags) tierList.tags = Array.isArray(tags) ? tags : [tags];
     await tierList.save();
 
+    console.log('[Templates] Tier list updated:', {
+      id: tierList._id,
+      title: tierList.title,
+      isPublic: tierList.isPublic,
+      category: tierList.category,
+      tags: tierList.tags
+    });
+
     // Check if template already exists
     let template = await Template.findOne({ tierListId });
+
+    console.log('[Templates] Existing template check:', {
+      found: !!template,
+      templateId: template?._id
+    });
 
     if (template) {
       // Update existing template
@@ -137,6 +168,15 @@ router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest,
       await template.save();
     } else {
       // Create new template
+      console.log('[Templates] Creating new template with data:', {
+        tierListId,
+        channelId: tierList.channelId,
+        channelName: tierList.channelName,
+        title: tierList.title,
+        category: (category && category.trim()) ? category : undefined,
+        itemCount: tierList.items.length
+      });
+
       template = new Template({
         tierListId,
         channelId: tierList.channelId,
@@ -150,7 +190,15 @@ router.post('/publish/:tierListId', authenticateTwitch, async (req: AuthRequest,
         isPublic: true,
       });
       await template.save();
+      console.log('[Templates] New template created:', template._id);
     }
+
+    console.log('[Templates] Final template state:', {
+      id: template._id,
+      isPublic: template.isPublic,
+      category: template.category,
+      title: template.title
+    });
 
     res.json({ message: 'Template published successfully', template });
   } catch (error: any) {
@@ -198,14 +246,33 @@ router.post('/unpublish/:tierListId', authenticateTwitch, async (req: AuthReques
     tierList.isPublic = false;
     await tierList.save();
 
-    // Update template to private
-    const template = await Template.findOne({ tierListId });
+    console.log('[Templates] Tier list updated to private, now looking for template...');
+
+    // Update template to private - try both string and ObjectId match
+    let template = await Template.findOne({ tierListId: tierListId });
+    
+    // If not found, try with string conversion
+    if (!template) {
+      console.log('[Templates] Template not found with direct match, trying ObjectId string...');
+      const tierListIdString = String(tierList._id);
+      template = await Template.findOne({ tierListId: tierListIdString });
+    }
+
     if (template) {
-      console.log('[Templates] Updating template:', template._id);
+      console.log('[Templates] Found template:', {
+        id: template._id,
+        tierListId: template.tierListId,
+        title: template.title,
+        isPublic: template.isPublic
+      });
       template.isPublic = false;
       await template.save();
+      console.log('[Templates] Template updated to private');
     } else {
-      console.log('[Templates] No template found for tier list:', tierListId);
+      console.log('[Templates] No template found for tier list. Searched for:', {
+        tierListId,
+        tierListIdString: String(tierList._id)
+      });
     }
 
     console.log('[Templates] Unpublish successful');
