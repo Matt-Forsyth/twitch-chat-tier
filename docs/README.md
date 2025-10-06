@@ -1,38 +1,31 @@
 # Documentation
 
-This folder contains all documentation for the Twitch Chat Tier List Extension.
+This folder contains documentation for the Twitch Chat Tier List Extension.
 
-## 📁 Folder Structure
+## 📁 Contents
 
-### `/guides` - Essential Documentation
-- **API_DOCUMENTATION.md** - Complete API reference for all backend endpoints
-- **SETUP_GUIDE.md** - Initial setup and deployment instructions
+- **[CHANGELOG.md](CHANGELOG.md)** - Complete version history and release notes for all versions
+- **[DEPLOYMENT_SUMMARY_v0.0.22.md](DEPLOYMENT_SUMMARY_v0.0.22.md)** - Latest deployment summary and checklist
 
-### `/releases` - Version Release Notes
-- **RELEASE_NOTES_v0.0.21.md** - Latest release with item management features
-- **IMPLEMENTATION_COMPLETE_v0.0.21.md** - Complete implementation summary
-- **FEATURE_SUMMARY_v0.0.21.md** - Detailed technical documentation
-- **HOTFIX_v0.0.21.md** - Deployment package fix documentation
+## 📋 Version History
 
-### `/archive` - Historical Documentation
-Old documentation files kept for reference.
-
-## 🚀 Quick Start
-
-1. Read **guides/SETUP_GUIDE.md** for initial setup
-2. Check **guides/API_DOCUMENTATION.md** for API reference
-3. See **releases/RELEASE_NOTES_v0.0.21.md** for latest features
+See **[CHANGELOG.md](CHANGELOG.md)** for complete version history from v0.0.18 through current.
 
 ## 📦 Current Version
 
-**v0.0.21** - Streamer Item Management
-- Accept/reject viewer suggestions
-- Add items to active tier lists
-- Edit existing items
-- Delete items with vote cleanup
+**v0.0.22** - Community Template System
+- Browse and share tier list templates
+- Publish tier lists as public templates
+- Clone templates from other streamers
+- Rate templates with 1-5 stars
+- Search, filter, and sort templates
+- Categories, tags, and descriptions
 
-## 🔗 Important Links
+## 🔗 Links
 
-- **Frontend Package**: `frontend/twitch-extension-v0.0.21-fixed.zip`
-- **Backend Deployment**: Railway (auto-deploy from GitHub)
+- **GitHub Repository**: [Matt-Forsyth/twitch-chat-tier](https://github.com/Matt-Forsyth/twitch-chat-tier)
 - **Extension ID**: `or6ehrdoc9gzasby1hmhhtw4wa0qdm`
+
+---
+
+**Note**: This repository is for viewing the source code and changelog. It is not intended for setting up your own copy of the extension.
