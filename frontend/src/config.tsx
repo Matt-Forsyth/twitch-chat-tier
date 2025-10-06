@@ -1265,19 +1265,20 @@ const Config: React.FC = () => {
       {showTemplateBrowser && (
         <TemplateBrowser
           onClose={() => setShowTemplateBrowser(false)}
-          onClone={async (templateId) => {
+          onClone={async (_tierListId) => {
             try {
-              console.log('[Config] Starting clone process for template:', templateId);
-              await apiClient.cloneTemplate(templateId);
-              console.log('[Config] Clone successful, closing browser...');
+              console.log('[Config] Template already cloned, refreshing tier lists...');
+              // The template was already cloned by TemplateBrowser
+              // _tierListId is the NEW tier list that was created, not a template ID
+              // So we just need to close the browser and reload the list
               setShowTemplateBrowser(false);
               console.log('[Config] Reloading tier lists...');
               await loadTierLists();
               console.log('[Config] Tier lists reloaded successfully');
               setSuccessMessage('Template cloned successfully! Find it in your tier list below.');
             } catch (err: any) {
-              console.error('[Config] Clone error:', err);
-              setError(`Failed to clone template: ${err.message || err.response?.data?.error || 'Unknown error'}`);
+              console.error('[Config] Error reloading tier lists:', err);
+              setError(`Failed to refresh tier list: ${err.message || err.response?.data?.error || 'Unknown error'}`);
             }
           }}
         />

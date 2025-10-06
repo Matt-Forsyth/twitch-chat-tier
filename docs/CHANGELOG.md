@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.4] - 2025-10-06 (Hotfix)
+
+### 🐛 Fixed
+- **Template Clone Error**: Fixed "Template not found" error that occurred after first successful clone
+  - **Root Cause:** The `onClone` callback in config.tsx was incorrectly calling `apiClient.cloneTemplate()` a second time with the newly created tier list ID instead of the template ID
+  - **Solution:** Removed redundant clone call from callback - the template is already cloned by TemplateBrowser
+  - The callback now only refreshes the tier list and shows success message
+  - Fixed parameter naming: `templateId` → `tierListId` to reflect actual value
+
+### 🔧 Technical
+- Frontend: Removed duplicate `apiClient.cloneTemplate()` call from config.tsx onClone callback
+- Frontend: onClone callback now only handles UI refresh after successful clone
+- The clone flow is now: User clicks → TemplateBrowser clones → callback refreshes UI
+
+### 📝 How It Was Found
+The enhanced logging added in v0.1.3 revealed that the callback was attempting to clone using a tier list ID instead of a template ID.
+
+---
+
 ## [0.1.3] - 2025-10-06 (Hotfix)
 
 ### 🐛 Fixed
