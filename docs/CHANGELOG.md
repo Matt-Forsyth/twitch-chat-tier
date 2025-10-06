@@ -56,8 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Collapsible Sections**: "Viewer Suggestions", "Manage Items", and "All Tier Lists" sections can now be collapsed/expanded for better organization
   - Item counts shown in section headers (e.g., "Manage Items (12)")
 - **Panel Updates**:
-  - "🔍 Browse Community Templates" button when no active tier list
-  - Template browser integration with clone callback
+  - ~~"🔍 Browse Community Templates" button when no active tier list~~ (Removed - streamers only)
+  - Template browser integration with clone callback (Config panel only)
 - Extended `TierListConfig` type with `description`, `category`, `tags[]`, `isPublic` fields
 - New `Template`, `TemplateSearchParams`, `TemplatesResponse` TypeScript interfaces
 - 10 new API client methods for template management
@@ -66,8 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config panel sections are now collapsible with ▶/▼ icons
 - Cleaner layout with more room for future features
 - Better visual hierarchy with expandable sections
-- Template browser accessible from both streamer config and viewer panel
-- **Removed viewer results view** - Viewers now only see their own vote after submitting (keeps voting more private and reduces spoilers)
+- Template browser accessible from streamer config panel only
+- Simplified viewer experience - removed results toggle and template browser
+
+### 🗑️ Removed
+- **Viewer Panel**: Removed "Browse Community Templates" button (streamers can browse from config instead)
+- **Viewer Panel**: Removed "My Vote" vs "Results" toggle buttons (keeps voting more private, reduces spoilers)
+- Viewers now only see their own submitted vote, not aggregated results
 
 ### 📚 Documentation
 - Added comprehensive Template System User Guide
