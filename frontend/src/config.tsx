@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { twitchExt } from './utils/twitch';
 import { apiClient } from './utils/api';
-import { TierListConfig, TierListItem, TierListResults } from './types';
+import { TierListConfig, TierListItem, TierListResults, Suggestion } from './types';
 import './styles/global.css';
 
 const Config: React.FC = () => {
@@ -15,6 +15,8 @@ const Config: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [editingItem, setEditingItem] = useState<{ id: string; name: string; imageUrl?: string } | null>(null);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -45,6 +47,14 @@ const Config: React.FC = () => {
       await loadTierLists();
     });
   }, []);
+
+  // Load suggestions for active tier list
+  useEffect(() => {
+    const activeTierList = tierLists.find(tl => tl.status === 'active');
+    if (activeTierList) {
+      loadSuggestions(activeTierList._id);
+    }
+  }, [tierLists]);
 
   const loadTierLists = async () => {
     try {
@@ -192,6 +202,106 @@ const Config: React.FC = () => {
   const cancelDelete = () => {
     console.log('[Config] Delete cancelled by user');
     setDeleteConfirmId(null);
+  };
+
+  // Item management functions
+  const handleAddItemToTierList = async (tierListId: string) => {
+    if (!newItemName.trim()) {
+      setError('Please provide an item name');
+      return;
+    }
+
+    try {
+      await apiClient.addItemToTierList(tierListId, newItemName.trim(), newItemImage.trim() || undefined);
+      setNewItemName('');
+      setNewItemImage('');
+      await loadTierLists();
+      if (selectedTierList?._id === tierListId) {
+        await loadResults(tierListId);
+      }
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to add item');
+    }
+  };
+
+  const handleEditItem = (item: TierListItem) => {
+    setEditingItem({ id: item.id, name: item.name, imageUrl: item.imageUrl });
+  };
+
+  const handleSaveEditedItem = async (tierListId: string) => {
+    if (!editingItem || !editingItem.name.trim()) {
+      setError('Please provide an item name');
+      return;
+    }
+
+    try {
+      await apiClient.updateTierListItem(
+        tierListId,
+        editingItem.id,
+        editingItem.name.trim(),
+        editingItem.imageUrl?.trim() || undefined
+      );
+      setEditingItem(null);
+      await loadTierLists();
+      if (selectedTierList?._id === tierListId) {
+        await loadResults(tierListId);
+      }
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update item');
+    }
+  };
+
+  const handleDeleteItem = async (tierListId: string, itemId: string) => {
+    if (!confirm('Are you sure you want to delete this item? This will also remove all votes for this item.')) {
+      return;
+    }
+
+    try {
+      await apiClient.removeItemFromTierList(tierListId, itemId);
+      await loadTierLists();
+      if (selectedTierList?._id === tierListId) {
+        await loadResults(tierListId);
+      }
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete item');
+    }
+  };
+
+  const handleAcceptSuggestion = async (suggestion: Suggestion) => {
+    try {
+      await apiClient.addItemToTierList(suggestion.tierListId, suggestion.itemName, suggestion.imageUrl);
+      await apiClient.approveSuggestion(suggestion._id);
+      await loadSuggestions(suggestion.tierListId);
+      await loadTierLists();
+      if (selectedTierList?._id === suggestion.tierListId) {
+        await loadResults(suggestion.tierListId);
+      }
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to accept suggestion');
+    }
+  };
+
+  const handleRejectSuggestion = async (suggestion: Suggestion) => {
+    try {
+      await apiClient.rejectSuggestion(suggestion._id);
+      await loadSuggestions(suggestion.tierListId);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reject suggestion');
+    }
+  };
+
+  const loadSuggestions = async (tierListId: string) => {
+    try {
+      const loadedSuggestions = await apiClient.getSuggestions(tierListId);
+      setSuggestions(loadedSuggestions.filter((s: Suggestion) => s.status === 'pending'));
+    } catch (err: any) {
+      console.error('Failed to load suggestions:', err);
+    }
   };
 
   const handleViewResults = async (tierList: TierListConfig) => {
@@ -365,6 +475,161 @@ const Config: React.FC = () => {
               <button className="button button-secondary" onClick={() => handleReset(activeTierList._id)}>
                 Reset Votes
               </button>
+            </div>
+
+            {/* Viewer Suggestions */}
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--twitch-border)' }}>
+              <h3>Viewer Suggestions</h3>
+              {suggestions.length === 0 ? (
+                <p style={{ color: 'var(--twitch-text-alt)', fontSize: '14px' }}>No pending suggestions</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                  {suggestions.map((suggestion) => (
+                    <div key={suggestion._id} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '10px',
+                      padding: '10px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '4px'
+                    }}>
+                      {suggestion.imageUrl && (
+                        <img 
+                          src={suggestion.imageUrl} 
+                          alt={suggestion.itemName}
+                          style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 'bold' }}>{suggestion.itemName}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--twitch-text-alt)' }}>
+                          Suggested by {suggestion.username}
+                        </div>
+                      </div>
+                      <button 
+                        className="button"
+                        onClick={() => handleAcceptSuggestion(suggestion)}
+                        style={{ padding: '5px 15px' }}
+                      >
+                        Accept
+                      </button>
+                      <button 
+                        className="button button-danger"
+                        onClick={() => handleRejectSuggestion(suggestion)}
+                        style={{ padding: '5px 15px' }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Item Management */}
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--twitch-border)' }}>
+              <h3>Manage Items</h3>
+              
+              {/* Add Item Form */}
+              <div style={{ marginTop: '10px', marginBottom: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '10px' }}>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    value={newItemName} 
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    placeholder="Item name"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddItemToTierList(activeTierList._id)}
+                  />
+                  <input 
+                    type="text" 
+                    className="input" 
+                    value={newItemImage} 
+                    onChange={(e) => setNewItemImage(e.target.value)}
+                    placeholder="Image URL (optional)"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddItemToTierList(activeTierList._id)}
+                  />
+                  <button 
+                    className="button" 
+                    onClick={() => handleAddItemToTierList(activeTierList._id)}
+                  >
+                    Add Item
+                  </button>
+                </div>
+              </div>
+
+              {/* Item List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                {activeTierList.items.map((item) => (
+                  <div key={item.id} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '10px',
+                    padding: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '4px'
+                  }}>
+                    {editingItem?.id === item.id ? (
+                      <>
+                        <input 
+                          type="text" 
+                          className="input" 
+                          value={editingItem.name} 
+                          onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                          style={{ flex: 1, padding: '5px' }}
+                        />
+                        <input 
+                          type="text" 
+                          className="input" 
+                          value={editingItem.imageUrl || ''} 
+                          onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                          placeholder="Image URL"
+                          style={{ flex: 2, padding: '5px' }}
+                        />
+                        <button 
+                          className="button"
+                          onClick={() => handleSaveEditedItem(activeTierList._id)}
+                          style={{ padding: '5px 15px' }}
+                        >
+                          Save
+                        </button>
+                        <button 
+                          className="button button-secondary"
+                          onClick={() => setEditingItem(null)}
+                          style={{ padding: '5px 15px' }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {item.imageUrl && (
+                          <img 
+                            src={item.imageUrl} 
+                            alt={item.name}
+                            style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                        )}
+                        <span style={{ flex: 1 }}>{item.name}</span>
+                        <button 
+                          className="button button-secondary"
+                          onClick={() => handleEditItem(item)}
+                          style={{ padding: '5px 15px' }}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          className="button button-danger"
+                          onClick={() => handleDeleteItem(activeTierList._id, item.id)}
+                          style={{ padding: '5px 15px' }}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

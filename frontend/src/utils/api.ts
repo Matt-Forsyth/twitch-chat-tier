@@ -83,6 +83,21 @@ class ApiClient {
     return response.data;
   }
 
+  async addItemToTierList(tierListId: string, name: string, imageUrl?: string) {
+    const response = await this.client.post(`/tierlists/${tierListId}/items`, { name, imageUrl });
+    return response.data;
+  }
+
+  async updateTierListItem(tierListId: string, itemId: string, name: string, imageUrl?: string) {
+    const response = await this.client.put(`/tierlists/${tierListId}/items/${itemId}`, { name, imageUrl });
+    return response.data;
+  }
+
+  async removeItemFromTierList(tierListId: string, itemId: string) {
+    const response = await this.client.delete(`/tierlists/${tierListId}/items/${itemId}`);
+    return response.data;
+  }
+
   // Vote endpoints
   async submitVote(tierListId: string, votes: any[]) {
     const response = await this.client.post('/votes', { tierListId, votes });

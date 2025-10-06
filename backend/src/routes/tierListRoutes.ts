@@ -297,4 +297,109 @@ router.post('/:id/reset', authenticateTwitch, requireBroadcaster, async (req: Au
   }
 });
 
+/**
+ * Add an item to a tier list (broadcaster only)
+ */
+router.post('/:id/items', authenticateTwitch, requireBroadcaster, async (req: AuthRequest, res: Response) => {
+  try {
+    const tierListId = req.params.id;
+    const channelId = req.twitchAuth!.channel_id;
+    const { name, imageUrl } = req.body;
+    
+    if (!name || !name.trim()) {
+      res.status(400).json({ error: 'Item name is required' });
+      return;
+    }
+    
+    const tierList = await TierListConfig.findOne({ _id: tierListId, channelId });
+    if (!tierList) {
+      res.status(404).json({ error: 'Tier list not found' });
+      return;
+    }
+    
+    const newItem = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      imageUrl: imageUrl?.trim(),
+    };
+    
+    tierList.items.push(newItem);
+    await tierList.save();
+    
+    res.status(201).json(tierList);
+  } catch (error) {
+    console.error('Error adding item:', error);
+    res.status(500).json({ error: 'Failed to add item' });
+  }
+});
+
+/**
+ * Update an item in a tier list (broadcaster only)
+ */
+router.put('/:id/items/:itemId', authenticateTwitch, requireBroadcaster, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id: tierListId, itemId } = req.params;
+    const channelId = req.twitchAuth!.channel_id;
+    const { name, imageUrl } = req.body;
+    
+    const tierList = await TierListConfig.findOne({ _id: tierListId, channelId });
+    if (!tierList) {
+      res.status(404).json({ error: 'Tier list not found' });
+      return;
+    }
+    
+    const item = tierList.items.find((i: any) => i.id === itemId);
+    if (!item) {
+      res.status(404).json({ error: 'Item not found' });
+      return;
+    }
+    
+    if (name !== undefined) item.name = name.trim();
+    if (imageUrl !== undefined) item.imageUrl = imageUrl?.trim();
+    
+    await tierList.save();
+    
+    res.json(tierList);
+  } catch (error) {
+    console.error('Error updating item:', error);
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
+
+/**
+ * Remove an item from a tier list (broadcaster only)
+ */
+router.delete('/:id/items/:itemId', authenticateTwitch, requireBroadcaster, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id: tierListId, itemId } = req.params;
+    const channelId = req.twitchAuth!.channel_id;
+    
+    const tierList = await TierListConfig.findOne({ _id: tierListId, channelId });
+    if (!tierList) {
+      res.status(404).json({ error: 'Tier list not found' });
+      return;
+    }
+    
+    const itemIndex = tierList.items.findIndex((i: any) => i.id === itemId);
+    if (itemIndex === -1) {
+      res.status(404).json({ error: 'Item not found' });
+      return;
+    }
+    
+    tierList.items.splice(itemIndex, 1);
+    await tierList.save();
+    
+    // Also remove any votes for this item
+    await Vote.updateMany(
+      { tierListId },
+      { $pull: { votes: { itemId } } }
+    );
+    
+    res.json(tierList);
+  } catch (error) {
+    console.error('Error removing item:', error);
+    res.status(500).json({ error: 'Failed to remove item' });
+  }
+});
+
 export default router;
