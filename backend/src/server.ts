@@ -13,6 +13,7 @@ import authRoutes from './routes/authRoutes';
 import voteRoutes from './routes/voteRoutes';
 import suggestionRoutes from './routes/suggestionRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import templateRoutes from './routes/templateRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -55,6 +56,7 @@ app.use('/api/tierlists', tierListRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/suggestions', suggestionRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/templates', templateRoutes);
 
 // WebSocket initialization
 initializeWebSocket(wss);

@@ -5,6 +5,7 @@ import { twitchExt } from './utils/twitch';
 import { apiClient } from './utils/api';
 import { wsClient } from './utils/websocket';
 import { TierListConfig, ItemVote } from './types';
+import TemplateBrowser from './TemplateBrowser';
 import './styles/global.css';
 
 const Panel: React.FC = () => {
@@ -21,6 +22,7 @@ const Panel: React.FC = () => {
   const [viewMode, setViewMode] = useState<'myVote' | 'results'>('myVote');
   const [results, setResults] = useState<any>(null);
   const [loadingResults, setLoadingResults] = useState(false);
+  const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
   useEffect(() => {
     twitchExt.init();
@@ -144,12 +146,35 @@ const Panel: React.FC = () => {
 
   if (!tierList) {
     return (
-      <div className="container">
-        <div className="card">
-          <h2>No Active Tier List</h2>
-          <p>The streamer hasn't started a tier list yet. Check back soon!</p>
+      <>
+        <div className="container">
+          <div className="card">
+            <h2>No Active Tier List</h2>
+            <p>The streamer hasn't started a tier list yet. Check back soon!</p>
+            <button 
+              className="button" 
+              onClick={() => setShowTemplateBrowser(true)}
+              style={{ marginTop: '15px', width: '100%' }}
+            >
+              🔍 Browse Community Templates
+            </button>
+          </div>
         </div>
-      </div>
+        {showTemplateBrowser && (
+          <TemplateBrowser
+            onClose={() => setShowTemplateBrowser(false)}
+            onClone={async (templateId) => {
+              try {
+                await apiClient.cloneTemplate(templateId);
+                setShowTemplateBrowser(false);
+                alert('Template cloned successfully! The streamer can now activate it.');
+              } catch (err: any) {
+                alert(`Failed to clone template: ${err.message}`);
+              }
+            }}
+          />
+        )}
+      </>
     );
   }
 

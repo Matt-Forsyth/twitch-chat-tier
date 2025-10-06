@@ -156,6 +156,64 @@ class ApiClient {
     const response = await this.client.post(`/analytics/generate/${tierListId}`);
     return response.data;
   }
+
+  // Template endpoints
+  async getTemplates(params?: {
+    category?: string;
+    tags?: string;
+    search?: string;
+    sort?: 'rating' | 'usage' | 'recent';
+    limit?: number;
+    skip?: number;
+  }) {
+    const queryString = new URLSearchParams(params as any).toString();
+    const response = await this.client.get(`/templates${queryString ? '?' + queryString : ''}`);
+    return response.data;
+  }
+
+  async getTemplate(id: string) {
+    const response = await this.client.get(`/templates/${id}`);
+    return response.data;
+  }
+
+  async publishTierList(tierListId: string, data: {
+    description?: string;
+    category?: string;
+    tags?: string[];
+  }) {
+    const response = await this.client.post(`/templates/publish/${tierListId}`, data);
+    return response.data;
+  }
+
+  async unpublishTierList(tierListId: string) {
+    const response = await this.client.post(`/templates/unpublish/${tierListId}`);
+    return response.data;
+  }
+
+  async cloneTemplate(id: string) {
+    const response = await this.client.post(`/templates/${id}/clone`);
+    return response.data;
+  }
+
+  async rateTemplate(id: string, rating: number) {
+    const response = await this.client.post(`/templates/${id}/rate`, { rating });
+    return response.data;
+  }
+
+  async getMyRating(id: string) {
+    const response = await this.client.get(`/templates/${id}/myrating`);
+    return response.data;
+  }
+
+  async getTemplateCategories() {
+    const response = await this.client.get('/templates/meta/categories');
+    return response.data;
+  }
+
+  async getTemplateTags() {
+    const response = await this.client.get('/templates/meta/tags');
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();

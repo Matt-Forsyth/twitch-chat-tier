@@ -17,6 +17,11 @@ const Config: React.FC = () => {
   const [resetConfirmId, setResetConfirmId] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [editingItem, setEditingItem] = useState<{ id: string; name: string; imageUrl?: string } | null>(null);
+  const [publishModalId, setPublishModalId] = useState<string | null>(null);
+  const [publishDescription, setPublishDescription] = useState('');
+  const [publishCategory, setPublishCategory] = useState('');
+  const [publishTags, setPublishTags] = useState('');
+  const [categories] = useState(['Gaming', 'Movies', 'TV Shows', 'Music', 'Food & Drink', 'Sports', 'Other']);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -301,6 +306,50 @@ const Config: React.FC = () => {
       setSuggestions(loadedSuggestions.filter((s: Suggestion) => s.status === 'pending'));
     } catch (err: any) {
       console.error('Failed to load suggestions:', err);
+    }
+  };
+
+  // Template/Publishing functions
+  const handleOpenPublishModal = (tierListId: string) => {
+    setPublishModalId(tierListId);
+    setPublishDescription('');
+    setPublishCategory('');
+    setPublishTags('');
+  };
+
+  const handlePublish = async () => {
+    if (!publishModalId) return;
+
+    try {
+      const tagsArray = publishTags.split(',').map(t => t.trim()).filter(t => t);
+      await apiClient.publishTierList(publishModalId, {
+        description: publishDescription || undefined,
+        category: publishCategory || undefined,
+        tags: tagsArray.length > 0 ? tagsArray : undefined,
+      });
+      
+      setPublishModalId(null);
+      setPublishDescription('');
+      setPublishCategory('');
+      setPublishTags('');
+      await loadTierLists();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to publish template');
+    }
+  };
+
+  const handleUnpublish = async (tierListId: string) => {
+    if (!confirm('Are you sure you want to make this tier list private? It will be removed from the template browser.')) {
+      return;
+    }
+
+    try {
+      await apiClient.unpublishTierList(tierListId);
+      await loadTierLists();
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to unpublish template');
     }
   };
 
@@ -639,8 +688,22 @@ const Config: React.FC = () => {
           {tierLists.map((tierList) => (
             <div key={tierList._id} className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                <div>
-                  <h3>{tierList.title}</h3>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ margin: 0 }}>{tierList.title}</h3>
+                    {tierList.isPublic && (
+                      <span style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        backgroundColor: '#00e5ff',
+                        color: '#000',
+                        fontWeight: 'bold',
+                      }}>
+                        🌐 PUBLIC
+                      </span>
+                    )}
+                  </div>
                   <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0' }}>
                     Status: <span style={{ 
                       color: tierList.status === 'active' ? '#00e5ff' : tierList.status === 'completed' ? '#7fff7f' : '#808080',
@@ -649,9 +712,36 @@ const Config: React.FC = () => {
                       {tierList.status.toUpperCase()}
                     </span>
                   </p>
+                  {tierList.description && (
+                    <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0', fontSize: '13px' }}>
+                      {tierList.description}
+                    </p>
+                  )}
                   <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0' }}>
                     {tierList.items.length} items
                   </p>
+                  {tierList.category && (
+                    <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0', fontSize: '12px' }}>
+                      Category: {tierList.category}
+                    </p>
+                  )}
+                  {tierList.tags.length > 0 && (
+                    <div style={{ margin: '5px 0', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                      {tierList.tags.map((tag, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            fontSize: '11px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          }}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <p style={{ color: 'var(--twitch-text-alt)', margin: '5px 0', fontSize: '12px' }}>
                     Created: {new Date(tierList.createdAt).toLocaleString()}
                   </p>
@@ -671,6 +761,16 @@ const Config: React.FC = () => {
                         Reactivate
                       </button>
                     </>
+                  )}
+                  {tierList.status === 'completed' && !tierList.isPublic && (
+                    <button className="button" onClick={() => handleOpenPublishModal(tierList._id)}>
+                      📤 Publish
+                    </button>
+                  )}
+                  {tierList.isPublic && (
+                    <button className="button button-secondary" onClick={() => handleUnpublish(tierList._id)}>
+                      🔒 Unpublish
+                    </button>
                   )}
                   <button 
                     className="button button-danger" 
@@ -779,6 +879,141 @@ const Config: React.FC = () => {
                 Reset Votes
               </button>
               <button className="button button-secondary" onClick={cancelReset} style={{ flex: 1 }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Publish Template Modal */}
+      {publishModalId && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{
+            maxWidth: '500px',
+            margin: '20px',
+            padding: '20px',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <h2 style={{ marginTop: 0 }}>📤 Publish as Template</h2>
+            <p style={{ color: 'var(--twitch-text-alt)', marginBottom: '20px' }}>
+              Share this tier list with the community. Other streamers can browse, clone, and rate it.
+            </p>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Title
+              </label>
+              <input
+                type="text"
+                value={tierLists.find(tl => tl._id === publishModalId)?.title || ''}
+                disabled
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '4px',
+                  color: 'var(--twitch-text-alt)',
+                  cursor: 'not-allowed'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Description (Optional)
+              </label>
+              <textarea
+                value={publishDescription}
+                onChange={(e) => setPublishDescription(e.target.value)}
+                placeholder="Describe your tier list... (max 500 characters)"
+                maxLength={500}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  backgroundColor: 'var(--twitch-bg)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '4px',
+                  color: 'var(--twitch-text)',
+                  minHeight: '80px',
+                  resize: 'vertical',
+                  fontFamily: 'inherit'
+                }}
+              />
+              <div style={{ textAlign: 'right', fontSize: '12px', color: 'var(--twitch-text-alt)', marginTop: '4px' }}>
+                {publishDescription.length}/500
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Category
+              </label>
+              <select
+                value={publishCategory}
+                onChange={(e) => setPublishCategory(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  backgroundColor: 'var(--twitch-bg)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '4px',
+                  color: 'var(--twitch-text)',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="">Select a category...</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Tags (Optional)
+              </label>
+              <input
+                type="text"
+                value={publishTags}
+                onChange={(e) => setPublishTags(e.target.value)}
+                placeholder="e.g., anime, action, 2023 (comma separated)"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  backgroundColor: 'var(--twitch-bg)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '4px',
+                  color: 'var(--twitch-text)'
+                }}
+              />
+              <div style={{ fontSize: '12px', color: 'var(--twitch-text-alt)', marginTop: '4px' }}>
+                Separate tags with commas. Max 10 tags.
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="button" onClick={handlePublish} style={{ flex: 1 }}>
+                📤 Publish
+              </button>
+              <button 
+                className="button button-secondary" 
+                onClick={() => setPublishModalId(null)} 
+                style={{ flex: 1 }}
+              >
                 Cancel
               </button>
             </div>

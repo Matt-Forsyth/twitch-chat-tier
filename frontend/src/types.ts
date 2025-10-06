@@ -9,12 +9,16 @@ export interface TierListConfig {
   channelId: string;
   channelName: string;
   title: string;
+  description?: string;
+  category?: string;
+  tags: string[];
   items: TierListItem[];
   tiers: string[];
   status: 'draft' | 'active' | 'completed';
   startTime?: string;
   endTime?: string;
   allowRealTimeUpdates: boolean;
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,4 +94,38 @@ export interface AnalyticsSummary {
   averageVotersPerList: number;
   mostPopularTier: string;
   tierDistribution: Record<string, number>;
+}
+
+export interface Template {
+  _id: string;
+  tierListId: string;
+  channelId: string;
+  channelName: string;
+  title: string;
+  description?: string;
+  items: TierListItem[];
+  tiers: string[];
+  category?: string;
+  tags: string[];
+  isPublic: boolean;
+  usageCount: number;
+  averageRating: number;
+  totalRatings: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TemplateSearchParams {
+  category?: string;
+  tags?: string;
+  search?: string;
+  sort?: 'rating' | 'usage' | 'recent';
+  limit?: number;
+  skip?: number;
+}
+
+export interface TemplatesResponse {
+  templates: Template[];
+  total: number;
+  hasMore: boolean;
 }
