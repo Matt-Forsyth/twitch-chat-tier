@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Item Deletion**: Fixed item deletion functionality in tier lists
   - Delete buttons now properly work in both active and editing views
   - Editing modal auto-refreshes after item changes
+- **Unpublish Debugging**: Added comprehensive logging and error messages
+  - Backend logs all unpublish operations with detailed context
+  - Frontend shows specific error messages via alerts
+  - Better diagnostics for troubleshooting unpublish issues
 
 ### ✨ Added
 - **Edit Items Button**: Added "✏️ Edit Items" button for draft and completed tier lists
