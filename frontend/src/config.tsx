@@ -301,20 +301,32 @@ const Config: React.FC = () => {
     if (!publishModalId) return;
 
     try {
+      console.log('[Frontend] Publishing tier list:', {
+        tierListId: publishModalId,
+        description: publishDescription,
+        category: publishCategory,
+        tags: publishTags
+      });
+
       const tagsArray = publishTags.split(',').map(t => t.trim()).filter(t => t);
-      await apiClient.publishTierList(publishModalId, {
+      const result = await apiClient.publishTierList(publishModalId, {
         description: publishDescription || undefined,
         category: publishCategory || undefined,
         tags: tagsArray.length > 0 ? tagsArray : undefined,
       });
+
+      console.log('[Frontend] Publish result:', result);
       
       setPublishModalId(null);
       setPublishDescription('');
       setPublishCategory('');
       setPublishTags('');
       await loadTierLists();
+      
+      setSuccessMessage('Template published successfully! It should now appear in the Template Browser.');
       setError(null);
     } catch (err: any) {
+      console.error('[Frontend] Publish error:', err);
       setError(err.message || 'Failed to publish template');
     }
   };

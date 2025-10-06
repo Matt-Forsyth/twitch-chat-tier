@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.27] - 2024-12-XX
+
+### 🐛 Debugging & Diagnostics
+- **Template Publishing Logging**: Added comprehensive console logging to template publishing
+  - Frontend logs publish request with all parameters
+  - Frontend logs publish result from API
+  - Success message confirms template is published
+  - TemplateBrowser logs all loaded templates with their properties
+  
+- **Template Debug Endpoint**: New backend endpoint to inspect templates
+  - GET `/api/templates/debug/channel/:channelId`
+  - Shows all templates for a channel (broadcaster only)
+  - Displays template ID, tierListId, title, isPublic status, category
+  - Helps diagnose template visibility issues
+
+### 📝 Technical Details
+- This version focuses on debugging why published templates may not appear in the browser
+- All logging uses `[Frontend]` and `[Templates]` prefixes for easy filtering
+- Backend logs show detailed template data structure
+
+---
+
 ## [0.0.26] - 2024-12-XX
 
 ### 🐛 Critical Fixes

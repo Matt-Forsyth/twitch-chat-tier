@@ -38,6 +38,7 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
 
   const loadTemplates = async (loadMore = false) => {
     try {
+      console.log('[TemplateBrowser] Loading templates:', { loadMore, search, category, sort });
       setLoading(true);
       const currentSkip = loadMore ? skip : 0;
       
@@ -47,6 +48,13 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
         sort,
         limit: 12,
         skip: currentSkip,
+      });
+
+      console.log('[TemplateBrowser] Loaded templates:', {
+        count: data.templates.length,
+        total: data.total,
+        hasMore: data.hasMore,
+        templates: data.templates.map((t: any) => ({ id: t._id, title: t.title, isPublic: t.isPublic, category: t.category }))
       });
 
       if (loadMore) {
@@ -59,6 +67,7 @@ const TemplateBrowser: React.FC<TemplateBrowserProps> = ({ onClose, onClone }) =
       setHasMore(data.hasMore);
       setError(null);
     } catch (err: any) {
+      console.error('[TemplateBrowser] Load error:', err);
       setError(err.message || 'Failed to load templates');
     } finally {
       setLoading(false);

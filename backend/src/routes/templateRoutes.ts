@@ -438,4 +438,37 @@ router.get('/meta/tags', async (req: Request, res: Response) => {
   }
 });
 
+// Debug endpoint - get all templates for a channel (including private)
+router.get('/debug/channel/:channelId', authenticateTwitch, async (req: AuthRequest, res: Response) => {
+  try {
+    const channelId = req.params.channelId;
+    
+    // Only allow broadcasters to see their own templates
+    if (req.twitchAuth?.channel_id !== channelId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const templates = await Template.find({ channelId })
+      .select('_id tierListId title isPublic category tags createdAt')
+      .sort({ createdAt: -1 });
+
+    console.log('[Templates] Debug channel templates:', {
+      channelId,
+      count: templates.length,
+      templates: templates.map(t => ({
+        id: t._id,
+        tierListId: t.tierListId,
+        title: t.title,
+        isPublic: t.isPublic,
+        category: t.category
+      }))
+    });
+
+    res.json({ templates });
+  } catch (error: any) {
+    console.error('[Templates] Debug error:', error);
+    res.status(500).json({ error: 'Failed to fetch debug info' });
+  }
+});
+
 export default router;
