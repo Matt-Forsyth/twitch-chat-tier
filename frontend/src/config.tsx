@@ -24,6 +24,7 @@ const Config: React.FC = () => {
   const [publishTags, setPublishTags] = useState('');
   const [categories] = useState(['Gaming', 'Movies', 'TV Shows', 'Music', 'Food & Drink', 'Sports', 'Other']);
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
+  const [editingTierList, setEditingTierList] = useState<TierListConfig | null>(null);
   const [expandedSections, setExpandedSections] = useState({
     suggestions: true,
     itemManagement: true,
@@ -259,6 +260,11 @@ const Config: React.FC = () => {
       if (selectedTierList?._id === tierListId) {
         await loadResults(tierListId);
       }
+      // Refresh editing modal if open
+      if (editingTierList?._id === tierListId) {
+        const updated = await apiClient.getTierList(tierListId);
+        setEditingTierList(updated);
+      }
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to update item');
@@ -275,6 +281,11 @@ const Config: React.FC = () => {
       await loadTierLists();
       if (selectedTierList?._id === tierListId) {
         await loadResults(tierListId);
+      }
+      // Refresh editing modal if open
+      if (editingTierList?._id === tierListId) {
+        const updated = await apiClient.getTierList(tierListId);
+        setEditingTierList(updated);
       }
       setError(null);
     } catch (err: any) {
@@ -805,9 +816,14 @@ const Config: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   {tierList.status === 'draft' && (
-                    <button className="button" onClick={() => handleActivate(tierList._id)}>
-                      Activate
-                    </button>
+                    <>
+                      <button className="button" onClick={() => handleActivate(tierList._id)}>
+                        Activate
+                      </button>
+                      <button className="button button-secondary" onClick={() => setEditingTierList(tierList)}>
+                        ✏️ Edit Items
+                      </button>
+                    </>
                   )}
                   {tierList.status === 'completed' && (
                     <>
@@ -816,6 +832,9 @@ const Config: React.FC = () => {
                       </button>
                       <button className="button" onClick={() => handleActivate(tierList._id)}>
                         Reactivate
+                      </button>
+                      <button className="button button-secondary" onClick={() => setEditingTierList(tierList)}>
+                        ✏️ Edit Items
                       </button>
                     </>
                   )}
@@ -1075,6 +1094,142 @@ const Config: React.FC = () => {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Tier List Items Modal */}
+      {editingTierList && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px',
+        }}>
+          <div style={{
+            backgroundColor: 'var(--twitch-background)',
+            borderRadius: '8px',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '20px',
+              borderBottom: '1px solid var(--twitch-border)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              <h2 style={{ margin: 0 }}>✏️ Edit Items - {editingTierList.title}</h2>
+              <button
+                className="button button-secondary"
+                onClick={() => setEditingTierList(null)}
+                style={{ padding: '5px 15px' }}
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '20px',
+            }}>
+              <p style={{ color: 'var(--twitch-text-alt)', marginBottom: '20px' }}>
+                {editingTierList.items.length} items in this tier list
+              </p>
+
+              {editingTierList.items.length === 0 ? (
+                <p style={{ textAlign: 'center', color: 'var(--twitch-text-alt)', padding: '40px' }}>
+                  No items yet. Items can be added when this tier list is active.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {editingTierList.items.map((item) => (
+                    <div key={item.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px',
+                      backgroundColor: 'var(--twitch-bg)',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                    }}>
+                      {editingItem?.id === item.id ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editingItem.name}
+                            onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                            className="input"
+                            style={{ flex: 1 }}
+                            placeholder="Item name"
+                          />
+                          <input
+                            type="text"
+                            value={editingItem.imageUrl || ''}
+                            onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                            className="input"
+                            style={{ flex: 1 }}
+                            placeholder="Image URL (optional)"
+                          />
+                          <button 
+                            className="button"
+                            onClick={() => handleSaveEditedItem(editingTierList._id)}
+                            style={{ padding: '5px 15px' }}
+                          >
+                            Save
+                          </button>
+                          <button 
+                            className="button button-secondary"
+                            onClick={() => setEditingItem(null)}
+                            style={{ padding: '5px 15px' }}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {item.imageUrl && (
+                            <img 
+                              src={item.imageUrl} 
+                              alt={item.name}
+                              style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }}
+                            />
+                          )}
+                          <span style={{ flex: 1 }}>{item.name}</span>
+                          <button 
+                            className="button button-secondary"
+                            onClick={() => handleEditItem(item)}
+                            style={{ padding: '5px 15px' }}
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            className="button button-danger"
+                            onClick={() => handleDeleteItem(editingTierList._id, item.id)}
+                            style={{ padding: '5px 15px' }}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

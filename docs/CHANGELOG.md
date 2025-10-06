@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.23] - 2024-12-XX
+
+### 🐛 Fixed
+- **Template Category Handling**: Fixed bug where empty category strings prevented templates from appearing in browser
+  - Backend now treats empty string categories as undefined/null
+  - Templates without categories now properly appear when browsing "All Categories"
+  - Category field validation improved to check for whitespace-only strings
+- **Item Deletion**: Fixed item deletion functionality in tier lists
+  - Delete buttons now properly work in both active and editing views
+  - Editing modal auto-refreshes after item changes
+
+### ✨ Added
+- **Edit Items Button**: Added "✏️ Edit Items" button for draft and completed tier lists
+  - View and manage items in non-active tier lists
+  - Edit item names and image URLs
+  - Delete items from any tier list
+  - Modal interface with real-time updates
+
+---
+
 ## [0.0.22] - 2024-12-XX
 
 ### 🌟 Added - Template System
