@@ -2,6 +2,52 @@
 
 All notable changes to the Twitch Chat Tier List Extension will be documented in this file.
 
+## [0.0.19] - 2024-10-05
+
+### Added
+- **🎯 Drag-and-Drop Voting**: Interactive drag-and-drop interface for tier assignment
+  - Items start in "Items to Rate" pool
+  - Drag items to S, A, B, C, D, or F tier rows
+  - Visual feedback during dragging
+  - Smooth animations with react-beautiful-dnd
+  - Better UX than dropdown menus
+
+- **💡 Viewer Suggestions**: Viewers can suggest items to add to active tier lists
+  - Submit suggestion form in panel
+  - Optional image URL support
+  - Broadcaster approval workflow
+  - Approve/reject buttons in config
+  - Approved items automatically added to tier list
+  - Duplicate prevention
+
+- **📊 Historical Analytics**: Comprehensive analytics dashboard for completed tier lists
+  - Channel-wide statistics (total lists, votes, voters)
+  - Individual tier list performance metrics
+  - Tier distribution visualization
+  - Top 10 items per tier list
+  - Most popular tier tracking
+  - Historical trends and comparison
+
+### Backend
+- New model: `Suggestion` with approval workflow
+- New model: `Analytics` with aggregated statistics
+- New routes: `/api/suggestions` (5 endpoints)
+- New routes: `/api/analytics` (4 endpoints)
+- Auto-generation of analytics on tier list completion
+
+### Frontend
+- Updated panel: Drag-and-drop interface
+- Updated panel: Suggestion submission form
+- Updated config: Analytics tab (needs UI completion)
+- Updated config: Suggestion management display
+- New types: Suggestion, Analytics, AnalyticsSummary
+- API client: 12 new methods for suggestions and analytics
+
+### Documentation
+- NEW_FEATURES.md with comprehensive guide
+- REMAINING_TASKS.md with implementation status
+- ANALYTICS_COMPONENT.txt with ready-to-use code
+
 ## [0.0.18] - 2024-10-05
 
 ### Removed
