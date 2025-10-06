@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleaner layout with more room for future features
 - Better visual hierarchy with expandable sections
 - Template browser accessible from both streamer config and viewer panel
+- **Removed viewer results view** - Viewers now only see their own vote after submitting (keeps voting more private and reduces spoilers)
 
 ### 📚 Documentation
 - Added comprehensive Template System User Guide

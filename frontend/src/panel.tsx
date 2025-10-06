@@ -19,9 +19,6 @@ const Panel: React.FC = () => {
   const [suggestionName, setSuggestionName] = useState('');
   const [suggestionImage, setSuggestionImage] = useState('');
   const [suggestionSubmitting, setSuggestionSubmitting] = useState(false);
-  const [viewMode, setViewMode] = useState<'myVote' | 'results'>('myVote');
-  const [results, setResults] = useState<any>(null);
-  const [loadingResults, setLoadingResults] = useState(false);
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
   useEffect(() => {
@@ -95,30 +92,12 @@ const Panel: React.FC = () => {
       setHasVoted(true);
       setError(null);
       
-      // Load results after voting
-      await loadResults();
-      
       // Notify via WebSocket
       wsClient.send('vote_update', { tierListId: tierList._id });
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const loadResults = async () => {
-    if (!tierList) return;
-    
-    try {
-      setLoadingResults(true);
-      const data = await apiClient.getTierListResults(tierList._id);
-      setResults(data);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load results');
-    } finally {
-      setLoadingResults(false);
     }
   };
 
@@ -299,31 +278,12 @@ const Panel: React.FC = () => {
         {/* Voted items display (after submission) */}
         {hasVoted && (
           <>
-            {/* Toggle View Button */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', justifyContent: 'center' }}>
-              <button 
-                className={viewMode === 'myVote' ? 'button' : 'button button-secondary'}
-                onClick={() => setViewMode('myVote')}
-                style={{ flex: 1 }}
-              >
-                📝 My Vote
-              </button>
-              <button 
-                className={viewMode === 'results' ? 'button' : 'button button-secondary'}
-                onClick={() => {
-                  setViewMode('results');
-                  if (!results) loadResults();
-                }}
-                style={{ flex: 1 }}
-              >
-                📊 Current Results
-              </button>
+            {/* Your Vote */}
+            <div style={{ textAlign: 'center', marginBottom: '15px', padding: '10px', backgroundColor: 'rgba(0, 255, 128, 0.1)', borderRadius: '4px' }}>
+              <p style={{ margin: 0, color: '#00ff80', fontWeight: 'bold' }}>✓ Vote Submitted!</p>
             </div>
-
-            {/* My Vote View */}
-            {viewMode === 'myVote' && (
-              <div style={{ marginBottom: '20px' }}>
-                {tierList.tiers.map((tier) => (
+            <div style={{ marginBottom: '20px' }}>
+              {tierList.tiers.map((tier) => (
                   <div key={tier} className="tier-container">
                     <div 
                       className="tier-label" 
@@ -350,54 +310,7 @@ const Panel: React.FC = () => {
                   </div>
                 ))}
               </div>
-            )}
-
-            {/* Results View */}
-            {viewMode === 'results' && (
-              <div style={{ marginBottom: '20px' }}>
-                {loadingResults ? (
-                  <div style={{ textAlign: 'center', padding: '20px' }}>Loading results...</div>
-                ) : results ? (
-                  <>
-                    <p style={{ textAlign: 'center', color: 'var(--twitch-text-alt)', marginBottom: '15px' }}>
-                      Total Voters: {results.totalVoters}
-                    </p>
-                    {tierList.tiers.map((tier) => {
-                      const tierResults = results.results.filter((r: any) => r.averageTier === tier);
-                      return (
-                        <div key={tier} className="tier-container">
-                          <div 
-                            className="tier-label" 
-                            style={{ 
-                              backgroundColor: getTierColor(tier),
-                              color: '#000'
-                            }}
-                          >
-                            {tier}
-                          </div>
-                          <div className="tier-items">
-                            {tierResults.map((result: any) => (
-                              <div key={result.item.id} className="tier-item selected">
-                                {result.item.imageUrl && <img src={result.item.imageUrl} alt={result.item.name} />}
-                                <span className="tier-item-name">{result.item.name}</span>
-                                <span style={{ fontSize: '11px', color: 'var(--twitch-text-alt)', display: 'block', marginTop: '3px' }}>
-                                  {result.totalVotes} votes
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '20px', color: 'var(--twitch-text-alt)' }}>
-                    Click "Current Results" to see how others voted
-                  </div>
-                )}
-              </div>
-            )}
-          </>
+            </>
         )}
 
         {!hasVoted && (
