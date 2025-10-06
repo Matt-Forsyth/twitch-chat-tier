@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.26] - 2024-12-XX
+
+### 🐛 Critical Fixes
+- **Vote Distribution Modal Rendering**: Fixed modal not appearing when clicking items
+  - Modal was placed outside results view (after early return)
+  - Now properly integrated within results view
+  - Modal now displays correctly with all vote data
+  
+- **Replaced alert() and confirm() Dialogs**: Twitch extensions block native browser dialogs
+  - Created custom confirmation modal for unpublish action
+  - Created custom success message modal
+  - Both modals work within Twitch's extension system
+  - Better UX with styled, branded modals
+
+### ✨ Improvements
+- **Unpublish Confirmation Modal**: Clean, clear confirmation dialog
+  - Shows warning message about template removal
+  - "Yes, Unpublish" and "Cancel" buttons
+  - Logs user action (confirm or cancel)
+  
+- **Success Message Modal**: Professional success notification
+  - Large checkmark icon
+  - Clear success message
+  - "OK" button to dismiss
+
+---
+
+## [0.0.25.1] - 2024-12-XX
+
+### 🐛 Critical Fix
+- **Vote Merging for Partial Voting**: Backend now properly merges new votes with existing votes
+  - Previously: submitting new votes would overwrite all previous votes
+  - Now: new votes are merged with existing votes, preserving all data
+  - Added logging to track vote merging (existing count, new count, final count)
+  - This fixes the issue where partial voting would clear previous votes
+
+---
+
 ## [0.0.25] - 2024-12-XX
 
 ### ✨ Added
